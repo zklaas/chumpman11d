@@ -42,4 +42,4 @@ No install is needed just to play: open `game.html` in Safari or another browser
 
 To remove it: delete the folder, `~/Applications/ChumpMan 11D.app` and `~/.local/bin/chumpman11d`.
 
-If something doesn't work, please write to zklaas@yahoo.ca.
+If something doesn't work, please write to zklaastest-testing@yahoo.com.

@@ -40,4 +40,4 @@ No install is needed just to play: open `game.html` in your browser, or play onl
 To remove it: delete the folder, the Start-menu entry (ChumpMan 11D) and
 `%LOCALAPPDATA%\Programs\ChumpMan11D`.
 
-If something doesn't work, please write to zklaas@yahoo.ca.
+If something doesn't work, please write to zklaastest-testing@yahoo.com.
