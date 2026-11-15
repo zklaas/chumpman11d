@@ -1,0 +1,2763 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ChumpMan 11D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --void:#0b0b1a;
+  --panel:#1a1a35;
+  --panel-hi:#242449;
+  --line:#32325c;
+  --cyan:#39c3c3;
+  --cyan-dim:#1e6b6b;
+  --red:#d64550;
+  --gold:#e8c84a;
+  --green:#5ee6a0;
+  --ink:#cfe8e8;
+  --ink-dim:#7d8bb0;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--ink);
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  height:100vh;
+  overflow:hidden;
+  padding:8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+}
+.pixel{font-family:'Press Start 2P',monospace;}
+h1.title{
+  flex:0 0 auto;
+  font-family:'Press Start 2P',monospace;
+  font-size:11px;
+  color:var(--gold);
+  text-shadow:1.5px 1.5px 0 #6b4f10, 0 0 14px rgba(232,200,74,.3);
+  margin:0;
+  letter-spacing:1px;
+}
+.app{
+  display:flex;
+  flex-direction:row;
+  gap:10px;
+  width:100%;
+  max-width:1500px;
+  flex:1 1 auto;
+  min-height:0;
+}
+.screen-wrap{
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  min-height:0;
+  min-width:0;
+  position:relative;
+  border-radius:14px;
+  padding:8px;
+  background:linear-gradient(160deg,#26264a,#141428 60%);
+  box-shadow:0 0 0 2px #060612, 0 14px 34px rgba(0,0,0,.55), inset 0 0 0 1px #3a3a68;
+}
+.screen-wrap .label{
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  color:var(--cyan-dim);
+  letter-spacing:1px;
+  margin-bottom:5px;
+  display:flex;
+  justify-content:space-between;
+  flex:0 0 auto;
+}
+.info-col{
+  flex:0 0 320px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+  min-height:0;
+}
+.canvas-frame{
+  position:relative;
+  flex:1 1 auto;
+  min-height:0;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+canvas{
+  display:block;
+  background:#050510;
+  border-radius:6px;
+  image-rendering:pixelated;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.8), inset 0 0 0 3px #000;
+}
+.crt-overlay{
+  position:absolute;
+  border-radius:6px;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 1px,
+    rgba(0,0,0,.14) 2px,
+    rgba(0,0,0,.14) 3px
+  );
+  mix-blend-mode:multiply;
+}
+.axis-key{
+  position:absolute;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  background:rgba(14,14,34,0.88);
+  border:1px solid rgba(57,195,195,0.4);
+  border-radius:6px;
+  padding:6px 10px;
+  color:var(--ink-dim);
+  line-height:1.7;
+  pointer-events:none;
+}
+.axis-key-row span{
+  font-family:'Press Start 2P',monospace;
+  font-size:9px;
+  margin-right:6px;
+}
+.axis-key-row .k{
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;
+  background:rgba(125,139,176,0.25);
+  border-radius:3px;
+  padding:1px 4px;
+  margin-right:2px;
+}
+.axis-key-row.dim{opacity:.3;}
+#modeRow{
+  display:none;
+  color:var(--gold);
+  font-weight:700;
+  border-top:1px solid rgba(125,139,176,0.3);
+  margin-top:4px;
+  padding-top:4px;
+}
+.mouse-hint{
+  position:absolute;
+  top:8px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:9px;
+  color:var(--ink-dim);
+  background:rgba(14,14,34,0.75);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:4px 9px;
+  pointer-events:none;
+  transition:opacity .3s;
+}
+.mouse-hint.locked{opacity:0;}
+.hud-strip{
+  flex:0 0 auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:8px 10px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px 8px;
+}
+.hud-strip .full{grid-column:1/-1;}
+.hud-block{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.hud-block .k{font-size:8px;letter-spacing:.5px;color:var(--ink-dim);text-transform:uppercase;}
+.hud-block .v{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--cyan);line-height:1.4;}
+.hud-block .v.gold{color:var(--gold);}
+.score-rate{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-dim);letter-spacing:0;}
+.vecline{
+  display:flex;
+  gap:3px;
+  flex-wrap:wrap;
+  font-size:9px;
+}
+.vecline .cell{
+  min-width:23px;
+  padding:2px 3px;
+  border:1px solid var(--line);
+  border-radius:3px;
+  text-align:center;
+  background:#12122a;
+  color:var(--ink-dim);
+}
+.vecline .cell .d{font-size:6.5px;opacity:.7;}
+.vecline .cell.active{border-color:var(--gold);color:var(--gold);box-shadow:0 0 8px rgba(232,200,74,.4);}
+.vecline .cell.visible{border-color:var(--cyan-dim);color:var(--cyan);}
+.vecline .cell.nonzero{border-color:var(--gold);color:var(--gold);}
+.debugbar{
+  flex:0 0 auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:6px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+}
+.debuglabel{
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  color:var(--ink-dim);
+  letter-spacing:.5px;
+  line-height:1.5;
+}
+.debugbar .vecline .cell{background:#0e0e22;}
+.nav-mode-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:6px;
+  width:100%;
+}
+.nav-mode-tag{
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  letter-spacing:.5px;
+  color:var(--cyan-dim);
+}
+.nav-mode-tag.vstring{color:#8b5cf6;}
+.nav-mode-tag.coin-track{color:var(--gold);}
+.track-btns{display:flex;gap:4px;flex:0 0 auto;}
+.track-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:8px;
+  color:var(--ink-dim);
+  background:#14142c;
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:4px 7px;
+  cursor:pointer;
+}
+.track-btn:hover{color:var(--ink);border-color:var(--ink-dim);}
+.track-btn.active{color:var(--void);background:var(--cyan);border-color:var(--cyan);}
+.track-btn.active.vstring{background:#8b5cf6;border-color:#8b5cf6;}
+.track-btn.active.coin-track{background:var(--gold);border-color:var(--gold);}
+.console{
+  flex:1 1 auto;
+  min-height:0;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.console .ctitle{
+  flex:0 0 auto;
+  font-family:'Press Start 2P',monospace;
+  font-size:8px;
+  color:var(--ink-dim);
+  letter-spacing:1px;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--line);
+}
+.dimrow{
+  display:grid;
+  grid-template-columns:20px 1fr 28px 30px;
+  align-items:center;
+  gap:6px;
+  padding:4px 5px;
+  border-radius:6px;
+  border:1px solid transparent;
+  background:#14142c;
+  cursor:pointer;
+  transition:background .15s, border-color .15s;
+}
+.dimrow:hover{background:#1c1c3c;}
+.dimrow.active{
+  border-color:var(--gold);
+  background:#241d0e;
+}
+.dimrow .key{
+  font-family:'Press Start 2P',monospace;
+  font-size:10px;
+  color:var(--void);
+  background:var(--ink-dim);
+  border-radius:3px;
+  text-align:center;
+  padding:4px 0;
+}
+.dimrow.active .key{background:var(--gold);}
+.dimrow .info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.dimrow .name{font-size:11px;color:var(--ink);}
+.dimrow .hint{font-size:9px;color:var(--ink-dim);}
+.dimrow .posval{
+  font-family:'JetBrains Mono',monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:12px;
+  font-weight:700;
+  text-align:right;
+  color:var(--ink-dim);
+}
+.dimrow .posval.pos{color:var(--cyan);}
+.dimrow .posval.neg{color:var(--red);}
+.dimrow .axis-tag{
+  font-size:9px;
+  font-weight:700;
+  text-align:center;
+  color:var(--void);
+  background:var(--line);
+  border-radius:3px;
+  padding:4px 2px;
+  cursor:pointer;
+  border:2px solid transparent;
+  transition:transform .12s, box-shadow .12s;
+}
+.dimrow .axis-tag:hover{transform:scale(1.08);}
+.dimrow .axis-tag.on{background:var(--green);}
+.dimrow .axis-tag.mid{background:var(--cyan-dim);color:var(--ink);}
+.dimrow .axis-tag.fixed{background:var(--cyan);color:var(--void);cursor:default;}
+.dimrow .axis-tag.fixed:hover{transform:none;}
+.dimrow .axis-tag.selected{
+  border-color:var(--gold);
+  animation:selectpulse 1s infinite;
+}
+.dimrow .axis-tag.target{
+  border-color:var(--green);
+  animation:targetpulse 1s infinite;
+}
+.dimrow .axis-tag.invalid{opacity:.3;}
+@keyframes selectpulse{
+  0%,100%{box-shadow:0 0 6px rgba(232,200,74,.6);}
+  50%{box-shadow:0 0 14px rgba(232,200,74,.95);}
+}
+@keyframes targetpulse{
+  0%,100%{box-shadow:0 0 6px rgba(94,230,160,.5);}
+  50%{box-shadow:0 0 14px rgba(94,230,160,.9);}
+}
+.dimlist{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  padding-right:2px;
+}
+.dimlist::-webkit-scrollbar{width:6px;}
+.dimlist::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+.arrows{
+  flex:0 0 auto;
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  padding-top:6px;
+  border-top:1px solid var(--line);
+}
+.arrow-btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:12px;
+  color:var(--red);
+  background:#14142c;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:10px 18px;
+  cursor:pointer;
+}
+.arrow-btn:active{background:var(--red);color:#fff;}
+.reset-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  color:var(--ink-dim);
+  background:none;
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:6px 10px;
+  cursor:pointer;
+}
+.reset-btn:hover{color:var(--ink);border-color:var(--ink-dim);}
+.intro-overlay{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:rgba(6,6,18,0.94);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.intro-card{
+  max-width:640px;
+  width:100%;
+  max-height:calc(100vh - 48px);
+  overflow-y:auto;
+  background:linear-gradient(160deg,#26264a,#141428 60%);
+  border:1px solid #3a3a68;
+  border-radius:14px;
+  box-shadow:0 0 0 2px #060612, 0 18px 44px rgba(0,0,0,.6);
+  padding:22px 26px 26px;
+}
+.intro-card h2{
+  font-family:'Press Start 2P',monospace;
+  font-size:13px;
+  color:var(--gold);
+  text-shadow:1.5px 1.5px 0 #6b4f10;
+  margin:0 0 4px;
+}
+.intro-card h3{
+  font-family:'Press Start 2P',monospace;
+  font-size:9px;
+  color:var(--cyan);
+  letter-spacing:1px;
+  margin:16px 0 4px;
+}
+.intro-card p{
+  font-size:11.5px;
+  line-height:1.6;
+  color:var(--ink);
+  margin:5px 0;
+}
+.intro-card h4{
+  font-family:'Press Start 2P',monospace;
+  font-size:8px;
+  color:var(--cyan);
+  letter-spacing:1px;
+  margin:10px 0 2px;
+}
+.intro-card p.indent{
+  margin:2px 0 8px 16px;
+  padding-left:10px;
+  border-left:2px solid var(--line);
+}
+.intro-card b{color:var(--ink);}
+.intro-card .k{
+  font-family:'Press Start 2P',monospace;
+  font-size:8px;
+  color:var(--void);
+  background:var(--ink-dim);
+  border-radius:3px;
+  padding:2px 5px;
+  white-space:nowrap;
+}
+.intro-continue{
+  display:block;
+  margin:22px auto 2px;
+  font-family:'Press Start 2P',monospace;
+  font-size:11px;
+  color:var(--void);
+  background:var(--gold);
+  border:none;
+  border-radius:8px;
+  padding:14px 30px;
+  cursor:pointer;
+  box-shadow:0 4px 0 #6b4f10;
+}
+.intro-continue:active{transform:translateY(3px);box-shadow:0 1px 0 #6b4f10;}
+.intro-card::-webkit-scrollbar{width:8px;}
+.gameover-overlay{z-index:200;background:rgba(20,4,6,0.95);}
+.gameover-card{border-color:#6b1f26;box-shadow:0 0 0 2px #060612,0 18px 44px rgba(0,0,0,.6),0 0 40px rgba(214,69,80,.25);text-align:center;}
+.gameover-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:20px;
+  color:var(--red);
+  text-shadow:2px 2px 0 #4a0f14;
+  margin:0 0 8px;
+}
+.gameover-sub{
+  font-family:'Press Start 2P',monospace;
+  font-size:11px;
+  color:var(--gold);
+  letter-spacing:1px;
+  margin:0 0 14px;
+}
+.gameover-card p:not(.gameover-sub){color:var(--ink-dim);}
+.gameover-retry{background:var(--red);box-shadow:0 4px 0 #7a1f28;}
+.gameover-retry:active{box-shadow:0 1px 0 #7a1f28;}
+.intro-card::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+.toast{
+  position:absolute;
+  top:44px;
+  left:50%;
+  transform:translateX(-50%);
+  font-family:'Press Start 2P',monospace;
+  font-size:10px;
+  line-height:1.6;
+  color:var(--gold);
+  background:rgba(11,11,26,.9);
+  border:1px solid var(--gold);
+  border-radius:6px;
+  padding:8px 14px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .3s;
+  max-width:min(92%,540px);
+  width:max-content;
+  white-space:normal;
+  text-align:center;
+}
+.toast.show{opacity:1;}
+@media (max-width:700px){
+  html,body{height:auto;min-height:100%;overflow:auto;}
+  body{padding:8px 10px;padding-bottom:96px;}
+  .app{flex-direction:column;flex:0 0 auto;}
+  .screen-wrap{flex:0 0 auto;}
+  .canvas-frame{flex:0 0 auto;aspect-ratio:16/10;width:100%;}
+  canvas{width:100%!important;height:100%!important;}
+  .info-col{flex:0 0 auto;width:100%;}
+  /* Dimension Console (+ its arrow buttons) is the only way to move on a
+     touchscreen, so put it right under the viewport, ahead of the stat
+     boxes. */
+  .console{flex:0 0 auto;order:-1;}
+  .debugbar{order:0;}
+  .hud-strip{order:1;}
+  .dimlist{max-height:340px;}
+  .axis-key{font-size:12px;}
+  .axis-key-row .k{font-size:10px;}
+  .debuglabel,.nav-mode-tag{font-size:9px;}
+  .track-btn{font-size:10px;padding:7px 11px;}
+  .hud-block .k{font-size:9px;}
+  .hud-block .v{font-size:13px;}
+  .dimrow{grid-template-columns:24px 1fr 32px 40px;padding:8px 6px;}
+  .dimrow .name{font-size:13px;}
+  .dimrow .hint{font-size:10px;}
+  .dimrow .posval{font-size:13px;}
+  .dimrow .axis-tag{font-size:11px;padding:8px 3px;}
+  .intro-card p{font-size:13px;}
+  .intro-card .k{font-size:9px;}
+  /* Movement buttons are the only way to move on a touchscreen, so pin them
+     to the bottom of the viewport instead of leaving them wherever the
+     dimension list happens to scroll to. */
+  .arrows{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:60;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    margin:0;
+    box-shadow:0 -6px 16px rgba(0,0,0,.45);
+  }
+  .arrow-btn{font-size:16px;padding:16px 30px;}
+}
+</style>
+
+<h1 class="title">CHUMPMAN 11D</h1>
+
+<div class="app">
+  <div class="screen-wrap">
+    <div class="label"><span>VIEWPORT // 3 OF 11 AXES SHOWN</span><span id="clearedTag" style="color:var(--green);opacity:0;">CLEARED</span></div>
+    <div class="canvas-frame" id="canvasFrame">
+      <canvas id="game" width="960" height="600"></canvas>
+      <div class="crt-overlay" id="crt"></div>
+      <div class="toast" id="toast"></div>
+      <div class="mouse-hint" id="mouseHint">click the screen to grab the mouse</div>
+      <div class="axis-key" id="axisKey">
+        <div class="axis-key-row xyzrow"><span style="color:#d64550;">X</span> mouse / ◄ ►  left · right</div>
+        <div class="axis-key-row xyzrow"><span style="color:#39c3c3;">Y</span> mouse / ▼ ▲  back · forward</div>
+        <div class="axis-key-row xyzrow"><span style="color:#5ee6a0;">Z</span> wheel / <span class="k">/</span> <span class="k">'</span>  down · up</div>
+        <div class="axis-key-row" id="modeRow"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-col">
+    <div class="debugbar">
+      <div class="debuglabel">CURRENT AXIS DIMENSIONS</div>
+      <div class="vecline" id="axisDimsVec"></div>
+      <div class="nav-mode-row">
+        <div class="nav-mode-tag" id="navModeTag">ARROWS TRACK: CLOSEST</div>
+        <div class="track-btns">
+          <button type="button" class="track-btn" id="trackBtnV" title="Track nearest vibrating string (V)">V</button>
+          <button type="button" class="track-btn" id="trackBtnC" title="Track nearest coin (C)">C</button>
+          <button type="button" class="track-btn" id="trackBtnB" title="Track nearest object of any kind (B)">B</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-strip">
+      <div class="hud-block">
+        <div class="k">Active Dim</div>
+        <div class="v gold" id="activeDimLabel">1st</div>
+      </div>
+      <div class="hud-block">
+        <div class="k">Coins</div>
+        <div class="v" id="coinCount">0 / 50</div>
+      </div>
+      <div class="hud-block">
+        <div class="k">Time (T)</div>
+        <div class="v gold" id="timeCounter">0 s</div>
+      </div>
+      <div class="hud-block">
+        <div class="k">Attributes (A)</div>
+        <div class="v" id="attrState">A 0 · none</div>
+      </div>
+      <div class="hud-block full">
+        <div class="k">Score</div>
+        <div class="v gold"><span id="scoreNum">0</span> <span class="score-rate" id="scoreRate">(100/coin)</span></div>
+      </div>
+      <div class="hud-block full">
+        <div class="k">Position Vector (11D)</div>
+        <div class="vecline" id="vecline"></div>
+      </div>
+      <button class="reset-btn full" id="resetBtn">↺ RESET RUN</button>
+    </div>
+
+    <div class="console">
+      <div class="ctitle">DIMENSION CONSOLE</div>
+      <div class="dimlist" id="dimlist"></div>
+      <div class="arrows">
+        <div class="arrow-btn" id="btnLeft" title="Step the active dimension back">◄</div>
+        <div class="arrow-btn" id="btnRight" title="Step the active dimension forward">►</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="intro-overlay" id="introScreen">
+  <div class="intro-card">
+    <h2>How to Play</h2>
+    <p>ChumpMan is stranded in an <b>11-dimensional</b> hyperspace. Your screen can only show <b>3 axes at once</b> — X (left / right), Y (back / forward), Z (down / up). The other six dimensions stay hidden until you rotate them into your "3D brane" view.</p>
+
+    <h3>Movement</h3>
+    <h4>Mouse</h4>
+    <p class="indent">Click the screen to grab the mouse; press <b>Esc</b> to let go of it.</p>
+    <p class="indent">Move it <b>left / right</b> to walk the X axis.</p>
+    <p class="indent">Move it <b>back / forward</b> (up / down on the pad) to walk the Y axis.</p>
+    <p class="indent">Roll the <b>wheel forward / backward</b> to walk the Z axis up / down.</p>
+    <h4>Keyboard</h4>
+    <p class="indent"><span class="k">◄</span> <span class="k">►</span> walk the X axis left / right.</p>
+    <p class="indent"><span class="k">▼</span> <span class="k">▲</span> walk the Y axis back / forward.</p>
+    <p class="indent"><span class="k">/</span> / <span class="k">'</span> walk the Z axis down / up.</p>
+    <p class="indent">Every other hidden dimension is stepped with the on-screen <span class="k">◄</span> <span class="k">►</span> buttons after picking it as the <b>active dimension</b> with <span class="k">1</span>–<span class="k">9</span>.</p>
+    <h4>Touch / phone</h4>
+    <p class="indent">There's no mouse-look or keyboard on a touchscreen, so <b>every</b> axis — X, Y, Z, Time, Attributes, all of them — moves the same way: tap its row in the <b>Dimension Console</b> below to make it the active dimension, then tap <span class="k">◄</span> <span class="k">►</span> underneath the list to step it back or forward. Tapping a row's colored chip on the right reassigns that dimension to a screen axis, the touch equivalent of X/Y/Z + digit below.</p>
+
+    <h3>Changing settings</h3>
+    <h4>X / Y / Z + digit</h4>
+    <p class="indent">Pick a screen axis with <span class="k">X</span>, <span class="k">Y</span> or <span class="k">Z</span>, then a digit <span class="k">1</span>–<span class="k">9</span> to send that axis to that dimension, rotating it into view so you can walk along it. (The Dimension Console does the same thing with clicks: click a lit X/Y/Z box, then an <b>empty</b> box on another row.) A dimension already carrying another screen axis can't take a second one — the game will let you know and refuse the pick.</p>
+    <h4>T</h4>
+    <p class="indent">Hands the screen's left-right input to the <b>Time</b> axis instead of X.</p>
+    <h4>A</h4>
+    <p class="indent">Hands the screen's left-right input to the <b>Attribute</b> axis instead of X.</p>
+    <h4>S</h4>
+    <p class="indent">Gives left-right input back to X, returning you to ordinary movement in your current 3D <b>space</b> brane.</p>
+    <h4>C</h4>
+    <p class="indent">Sets ChumpMan's tracker to the nearest fully-visible <b style="color:#e8c84a;">gold coin</b> in your current 3D brane, and drops you out of T/A mode back into X/Y/Z movement.</p>
+    <h4>V</h4>
+    <p class="indent">Sets ChumpMan's tracker to the nearest <b style="color:#8b5cf6;">vibrating string</b> in your current 3D brane — the thing that, once you reach it, flings you to a different 3D brane view — and drops you out of T/A mode back into X/Y/Z movement.</p>
+    <h4>B</h4>
+    <p class="indent">Sets ChumpMan's tracker to the nearest object of <b>any</b> kind in your current 3D brane, and drops you out of T/A mode back into X/Y/Z movement. If nothing of the requested kind is in view for any of these three, it says so and falls back to the closest object of any kind; the sidebar's <b>ARROWS TRACK</b> line always shows which mode is active.</p>
+    <p class="indent">Each of these three also has its own <span class="k">V</span> <span class="k">C</span> <span class="k">B</span> button right next to the <b>ARROWS TRACK</b> line — click or tap whichever one you want, no keyboard required.</p>
+
+    <h3>Coins</h3>
+    <p>There are <b>50</b> coins, each living in three dimensions. A coin glows <b style="color:#5a94d9;">blue</b> (1), <b style="color:#8fe0b0;">green</b> (2) or <b style="color:#e8c84a;">gold</b> (3) for how many of its dimensions are <b>currently in view</b>. Only <b>gold</b> coins can be collected. Gather all 50, then return to the origin — every axis at 0 — to clear the run.</p>
+    <p>Three small arrows ride along on ChumpMan, one per screen axis, pointing toward whatever's <b>nearest</b> — a coin, or a hidden coin's stand-in thing made real — straight along X or Z, diagonally for Y, each labeled with how many steps that way. An axis that thing doesn't need at all gets a <b>kink</b> instead of a straight arrow: there's no straight line for it, the rest of the distance is hidden on a dimension not currently on any screen axis. The number badge over his shoulder is separate — it always tracks distance to the nearest <b>coin</b> specifically.</p>
+
+    <h3>Score</h3>
+    <p>Each coin is worth <b>100 points</b> when the time counter is at zero, sliding down the farther it strays from zero in <b>either</b> direction — losing a chunk of value for every <b>order of magnitude</b> away from zero (10, then 100, then 1000, positive or negative), and just as much in between as right at those marks, since it follows the counter's <b>logarithm</b> continuously rather than stepping down all at once. It never drops below 1 point a coin, however far the counter strays. Score is live — wind time back toward zero, from either side, and the rate climbs right back up, no matter how it got low in the first place.</p>
+
+    <h3>T — Time</h3>
+    <p><b>Left</b> winds the clock <b>backward</b> one second, <b>right</b> moves it <b>forward</b> one — and every other kind of move, on any axis, in any mode, advances the clock a second too. Down/up (<span class="k">▼</span> <span class="k">▲</span>) and <span class="k">/</span> / <span class="k">'</span> mean nothing to T (or A), so pressing one drops you straight back to ordinary X/Y/Z movement and makes that Y/Z move instead, same as pressing <span class="k">S</span> first.</p>
+    <p>Winding time <b>backward</b> is also how you fight the score decay — but only as far as zero. A coin's value only depends on how far the counter <b>currently</b> sits from zero, in either direction, so winding it back toward zero brings the rate right back up no matter how high it climbed getting there; wind it past zero into negative numbers, though, and the same decay starts working against you again.</p>
+    <p>ChumpMan's position is recorded at <b>every second</b> he's ever passed through — along with which 3 dimensions were on X/Y/Z at that instant. Wind time back and walk forward again, and once the counter reaches a second he's already lived, its <b>ghost</b> — an opaque outline of exactly where he stood then — reappears on screen for that one second only, colored like a coin (<b style="color:#5a94d9;">blue</b>, <b style="color:#c6f5d8;">green</b>, <b style="color:#fff2b8;">gold</b>) by how many of <i>its own</i> original dimensions still happen to be on your <i>current</i> brane — that overlap is the only danger it poses. Land exactly on its position along every one of those overlapping dimensions and each one scores a hit: the game will warn you at one hit, warn you more sternly at two, and hits piling up to three across the run — however they arrive — ends the run.</p>
+    <p>So if you do reverse time, do your best not to meet up with yourself: stay off your past self's current <b>line</b> of sight — an exact match on just one dimension you still share with him — and off his current <b>plane</b> of sight — a match on two — since either racks up a warning. Above all, avoid being <b>currently exactly where your past self was at that time</b>: a match across all three dimensions you now share with him is dangerous enough by itself to end the run outright. None of this can happen, though, while you're still mid-transit on T (or steering A) — the ghost can't see you until you've dropped back into ordinary Space Mode.</p>
+    <p>Time travel can't undo a coin, though. Once collected, that location is permanently retired from coin-hood — it shows up from then on as a dashed, hollow <b>claimed</b> husk, in whatever form its visibility calls for, no matter how far back you wind the clock or which dimensions rotate into view. Stand exactly on one and the game will have something to say about it.</p>
+
+    <h3>A — Attributes made real</h3>
+    <p>A coin with <b>none</b> of its three dimensions in view isn't dropped — it stands in as a thing made real: a whale, a potted plant, Schrödinger's cat alive or dead, or aliens from the <b>8th dimension</b>, good or bad, at its own fixed spot on screen. Which thing stands in for which coin is set by your position along A — move along A and they change, come back and they're the same. Rotate one of that coin's dimensions into view and the thing becomes the coin again.</p>
+    <p>The point of traveling along A is to change probability until at least one of the things you see becomes a <b style="color:#8b5cf6;">vibrating string</b> — once you find one, walking to it is a fast way to change your position, flinging you to a whole new 3D brane in one step rather than rotating and walking there the slow way.</p>
+    <p>Walk ChumpMan to the <b>exact spot</b> of one of these things — the whale, the plant, the cat alive or dead, or either alien — and it may say something, or you may just learn something about it.</p>
+
+    <h3>Vibrating strings</h3>
+    <p>A thing made real can also come up as a <b style="color:#8b5cf6;">vibrating string</b>. Walk ChumpMan to its exact spot and it flings him to an entirely new X / Y / Z combination — three fresh dimensions land on the screen axes (watch the Current Axis Dimensions panel change) and he lands at a fresh spot on them. The string doesn't reappear — it settles permanently into whatever it finds there: a <b style="color:#d64550;">CHUTE</b> if you've landed on a 3D brane where <b>no</b> coin is completely visible, or a <b style="color:#5ee6a0;">LADDER</b> if you've landed on one where a coin <b>is</b> completely visible and ready to go collect. Stand on one later and the game will just note which it is.</p>
+
+    <button class="intro-continue" id="introContinue">Continue</button>
+  </div>
+</div>
+
+<div class="intro-overlay gameover-overlay" id="gameOverScreen" style="display:none;">
+  <div class="intro-card gameover-card">
+    <h2 class="gameover-title">GAME OVER</h2>
+    <p class="gameover-sub">YOU MET ANTI-YOU</p>
+    <p>Winding through time long enough, ChumpMan finally walked into the exact spot his own ghost was standing. Two of him, one place — hyperspace doesn't allow it.</p>
+    <p>Final score: <b id="gameOverScore" style="color:var(--gold);">0</b></p>
+    <button class="intro-continue gameover-retry" id="gameOverRetry">Try Again</button>
+  </div>
+</div>
+
+<script>
+// --- Diagnostics -----------------------------------------------------
+// Surfaces any uncaught JS error directly on screen (no DevTools needed)
+// and keeps a small rolling log of recent actions in localStorage, so if
+// the game ever freezes, what led up to it survives even a forced restart.
+// Purely additive -- never changes gameplay behavior, and every call is
+// wrapped so a logging failure can't itself cause a problem.
+window.__diag = { actions: [] };
+function __diagLog(action, detail){
+  try{
+    const entry = { t: Date.now(), action, detail };
+    window.__diag.actions.push(entry);
+    if(window.__diag.actions.length > 80) window.__diag.actions.shift();
+    localStorage.setItem('chumpman11d_actionLog', JSON.stringify(window.__diag.actions));
+  } catch(_){}
+}
+function __showDiagBanner(text){
+  try{
+    let banner = document.getElementById('diagErrorBanner');
+    if(!banner){
+      banner = document.createElement('div');
+      banner.id = 'diagErrorBanner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;'
+        + 'background:#d64550;color:#fff;font:12px/1.4 monospace;padding:10px 14px;'
+        + 'white-space:pre-wrap;word-break:break-word;box-shadow:0 2px 8px rgba(0,0,0,.5);';
+      document.documentElement.appendChild(banner);
+    }
+    banner.textContent = text;
+  } catch(_){}
+}
+window.addEventListener('error', function(e){
+  const msg = 'CHUMPMAN 11D ERROR: ' + e.message + '\n  at ' + (e.filename||'?') + ':' + e.lineno + ':' + e.colno
+    + (e.error && e.error.stack ? '\n' + e.error.stack : '');
+  __diagLog('error', msg);
+  __showDiagBanner(msg + '\n\n(This banner stays on screen -- please copy it and share it.)');
+});
+window.addEventListener('unhandledrejection', function(e){
+  const msg = 'CHUMPMAN 11D UNHANDLED PROMISE REJECTION: ' + e.reason;
+  __diagLog('rejection', msg);
+  __showDiagBanner(msg);
+});
+</script>
+
+<script>
+(function(){
+"use strict";
+const N = 11;          // 9 spatial dims + T (time) + A (attributes)
+const COIN_DIMS = 9;   // coins & the flag only ever live in the first nine
+const T_DIM = 9;       // the time axis
+const A_DIM = 10;      // the "attributes made real" axis
+const ORDINAL = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","T","A"];
+const KEYS = ["1","2","3","4","5","6","7","8","9","t","a"];
+
+function zeros(){ return new Array(N).fill(0); }
+function vAdd(a,b){ return a.map((x,i)=>x+b[i]); }
+function vSub(a,b){ return a.map((x,i)=>x-b[i]); }
+function vScale(a,s){ return a.map(x=>x*s); }
+function vDot(a,b){ let s=0; for(let i=0;i<N;i++) s+=a[i]*b[i]; return s; }
+function vNorm(a){ return Math.sqrt(vDot(a,a)); }
+function oneHot(i){ const v=zeros(); v[i]=1; return v; }
+
+let pos = zeros();
+let camPos = zeros();
+let activeDim = 0;
+let introDismissed = false;
+// 'XYZ' = left-right/back-forward/wheel drive X/Y/Z as usual; 'T' or 'A'
+// narrows every left-right input (mouse dx, Left/Right arrow keys) onto the
+// Time or Attributes axis instead, and mutes back-forward/wheel entirely.
+let controlMode = 'XYZ';
+// What the nav arrows point at: 'nearest' (any coin or attribute, the
+// default) or 'vibratingString' (only vibrating strings, toggled with V/C).
+let navTargetMode = 'nearest';
+
+let bX = oneHot(0);
+let bY = oneHot(1);
+let bZ = oneHot(2);
+
+let rotAnim = null;
+
+let hopAnim = 0;
+let hopDir = 0;
+let hopAxisRole = null;
+
+let coins = [];
+let flagPos = zeros();
+let coinsCollected = 0;
+let cleared = false;
+
+// --- T axis (time) -------------------------------------------------------
+let timeSec = 0;          // the "time" counter, in seconds
+// ChumpMan's full position, recorded the first time he's ever at a given
+// second -- second (integer) -> {pos, dims} snapshot. Never overwritten once
+// set, so it stays a stable ghost of wherever he stood -- and which 3
+// dimensions were on X/Y/Z -- at that moment.
+let timeHistory = new Map();
+// True only on a second already in timeHistory *before* this move landed on
+// it -- i.e. an actual revisit, not the moment it's first being recorded.
+// Drives whether the ghost is drawn at all.
+let timeSecondRevisited = false;
+// Cumulative across the whole run -- each real encounter with a ghost adds
+// as many points as it had dimensions overlapping the player's current
+// brane (with an exact position match on those dimensions). Reaching 3
+// ends the run; short of that, it just racks up warnings.
+let hitPoints = 0;
+let gameOver = false;
+// --- A axis (attributes made real) -------------------------------------
+// A coin whose dimensions are all out of view is drawn as one of the four
+// "things made real" instead. Which thing stands in for coin i is a pure
+// function of (i, current A coordinate) -- see attrTypeFor().
+
+function randInt(min,max){ return min + Math.floor(Math.random()*(max-min+1)); }
+function randSigned(min,max){ return randInt(min,max) * (Math.random()<0.5 ? -1 : 1); }
+function shuffledDims(){
+  const arr = [...Array(COIN_DIMS).keys()];
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    const tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+  }
+  return arr;
+}
+
+const COIN_COUNT = 50;
+
+// Three fixed offsets (not dimensions) where coin i is drawn -- as one of the
+// "X, Y, Z" coordinates -- when it's out of view and standing in as a "thing
+// made real". Deterministic by index, so the offsets stay put for a whole
+// run and survive a reset. They're applied to whichever three dimensions
+// are CURRENTLY on the X/Y/Z screen axes (see effectiveAnchor), not fixed
+// dimensions, so a stand-in that's on screen at all is always reachable by
+// walking the current axes straight to it -- no rotation required.
+function attrAnchorOffsetsForIndex(i){
+  const rnd = mulberry32((Math.imul(i + 1, 2246822519) ^ 0x9e3779b9) >>> 0);
+  rnd(); rnd();
+  let ox = Math.round((rnd() * 2 - 1) * 6);   // X  [-6, 6]
+  let oy = Math.round((rnd() * 2 - 1) * 5);   // Y  [-5, 5]
+  let oz = Math.round((rnd() * 2 - 1) * 4);   // Z  [-4, 4]
+  // Every offset must be nonzero -- a zeroed-out offset would make that one
+  // axis permanently irrelevant for this stand-in (a bent arrow) even while
+  // it's fully visible on screen, breaking the reachable-on-all-three-axes
+  // guarantee for something the game is actively rendering as an attribute.
+  if(ox === 0) ox = (i % 2 ? 3 : -3);
+  if(oy === 0) oy = (i % 2 ? 2 : -2);
+  if(oz === 0) oz = (i % 2 ? 2 : -2);
+  return [ox, oy, oz];
+}
+
+function makeLevel(){
+  const total = COIN_COUNT;
+  const positions = Array.from({length: total}, ()=>zeros());
+  const used = Array.from({length: total}, ()=>new Set());
+  const dims = shuffledDims();
+  for(let d=0; d<COIN_DIMS; d++){
+    const coinIdx = d % total;
+    positions[coinIdx][dims[d]] = randSigned(3,7);
+    used[coinIdx].add(dims[d]);
+  }
+  for(let i=0;i<total;i++){
+    let tries = 0;
+    while(used[i].size < 3 && tries < 30){
+      const d = randInt(0,COIN_DIMS-1);
+      if(!used[i].has(d)){
+        positions[i][d] = randSigned(3,7);
+        used[i].add(d);
+      }
+      tries++;
+    }
+  }
+  coins = positions.map((pos,i)=>({pos, got:false, anchorOffsets: attrAnchorOffsetsForIndex(i), portalResolved:null}));
+  coinsCollected = 0;
+  cleared = false;
+}
+makeLevel();
+
+function gramSchmidtReject(v, against){
+  let r = v.slice();
+  against.forEach(u=>{
+    const c = vDot(r,u);
+    r = vSub(r, vScale(u,c));
+  });
+  return r;
+}
+
+let selectedAxisSource = null;
+
+function startAxisRotation(axisLetter, toDim){
+  if(rotAnim) return;
+  let current, others;
+  if(axisLetter==='X'){ current=bX; others=[bY,bZ]; }
+  else if(axisLetter==='Y'){ current=bY; others=[bX,bZ]; }
+  else { current=bZ; others=[bX,bY]; }
+  const target = gramSchmidtReject(oneHot(toDim), others);
+  const mag = vNorm(target);
+  if(mag < 1e-4){
+    showToast("DIMENSIONAL SHEAR");
+    return;
+  }
+  const targetUnit = vScale(target, 1/mag);
+  rotAnim = { from: current.slice(), to: targetUnit, t:0, dur: 550, axis: axisLetter };
+}
+
+function handleAxisTagClick(dimIndex){
+  if(rotAnim || gameOver) return;
+  const info = axisTagFor(dimIndex);
+  if(info.cls === 'fixed'){
+    showToast((dimIndex===T_DIM?"T":"A")+" IS ITS OWN AXIS — JUST MOVE");
+    return;
+  }
+  if(!selectedAxisSource){
+    if(info.cls === 'on'){
+      selectedAxisSource = { dim: dimIndex, axis: info.label };
+      renderDimList();
+    } else {
+      showToast("PICK UP AN X/Y/Z BOX FIRST");
+    }
+    return;
+  }
+  if(dimIndex === selectedAxisSource.dim){
+    selectedAxisSource = null;
+    renderDimList();
+    return;
+  }
+  if(info.cls === 'on'){
+    // That dimension is already carrying a different screen axis -- refuse
+    // the swap instead of silently reinterpreting the click.
+    showToast("DIMENSIONAL SHEAR");
+    return;
+  }
+  startAxisRotation(selectedAxisSource.axis, dimIndex);
+  selectedAxisSource = null;
+  renderDimList();
+}
+
+function updateRotation(dt){
+  if(!rotAnim) return;
+  rotAnim.t += dt;
+  let p = Math.min(1, rotAnim.t / rotAnim.dur);
+  const e = 1 - Math.pow(1-p, 3);
+  const from = rotAnim.from, to = rotAnim.to;
+  const dot = Math.max(-1, Math.min(1, vDot(from,to)));
+  const omega = Math.acos(dot);
+  let vec;
+  if(omega < 1e-6){
+    vec = to.slice();
+  } else {
+    const s0 = Math.sin((1-e)*omega)/Math.sin(omega);
+    const s1 = Math.sin(e*omega)/Math.sin(omega);
+    vec = from.map((x,i)=> x*s0 + to[i]*s1);
+  }
+  if(rotAnim.axis==='X') bX = vec;
+  else if(rotAnim.axis==='Y') bY = vec;
+  else bZ = vec;
+  if(p>=1){ rotAnim = null; renderDimList(); refreshActiveDimLabel(); renderAxisDimsPanel(); }
+}
+
+let toastTimer = null;
+function showToast(msg, duration=1400){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+// Set briefly whenever a message really needs to be seen before the player
+// can walk right past it -- move() ignores input until this time passes.
+let inputFrozenUntil = 0;
+function freezeInput(ms){
+  inputFrozenUntil = performance.now() + ms;
+}
+
+// While active, frame() draws a dashed line -- two, elbowed, if the ghost's
+// danger dimensions form a plane rather than a line -- from ChumpMan to his
+// ghost, to make the shared dimension(s) that just scored a hit visible.
+// Cleared simply by time running out; nothing to explicitly erase since the
+// canvas is fully redrawn every frame regardless.
+let sightLineUntil = 0;
+let sightLineOverlap = 0;
+function showSightLines(overlapCount, ms){
+  sightLineOverlap = overlapCount;
+  sightLineUntil = performance.now() + ms;
+}
+
+function drawSightLines(){
+  if(performance.now() >= sightLineUntil) return;
+  if(!timeSecondRevisited) return;
+  const ghost = timeHistory.get(timeSec);
+  if(!ghost) return;
+  const pPlayer = project(pos);
+  const pGhost = project(ghost.pos);
+  ctx.save();
+  ctx.strokeStyle = "rgba(214,69,80,0.85)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6,4]);
+  ctx.beginPath();
+  if(sightLineOverlap <= 1){
+    ctx.moveTo(pPlayer.sx, pPlayer.sy);
+    ctx.lineTo(pGhost.sx, pGhost.sy);
+  } else {
+    // Two dimensions overlap -- draw the "plane" as an elbowed pair of
+    // lines rather than one diagonal, so each leg reads as its own axis.
+    ctx.moveTo(pPlayer.sx, pPlayer.sy);
+    ctx.lineTo(pGhost.sx, pPlayer.sy);
+    ctx.lineTo(pGhost.sx, pGhost.sy);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function axisTagFor(dimIndex){
+  // T and A are their own dedicated axes -- always walkable, never rotated.
+  if(dimIndex === T_DIM) return { label:"T", cls:"fixed" };
+  if(dimIndex === A_DIM) return { label:"A", cls:"fixed" };
+  const e = oneHot(dimIndex);
+  const dx = Math.abs(vDot(e,bX));
+  const dy = Math.abs(vDot(e,bY));
+  const dz = Math.abs(vDot(e,bZ));
+  const best = Math.max(dx,dy,dz);
+  if(best > 0.995) return { label: dx===best ? "X":(dy===best?"Y":"Z"), cls:"on" };
+  if(best > 0.15) return { label: "~"+Math.round(best*100)+"%", cls:"mid" };
+  return { label:"—", cls:"" };
+}
+
+function roleForDim(dimIndex){
+  const e = oneHot(dimIndex);
+  if(Math.abs(vDot(e,bX)) > 0.995) return 'X';
+  if(Math.abs(vDot(e,bY)) > 0.995) return 'Y';
+  if(Math.abs(vDot(e,bZ)) > 0.995) return 'Z';
+  return null;
+}
+
+function move(delta){
+  if(gameOver) return;
+  if(performance.now() < inputFrozenUntil) return;
+  __diagLog('move', {delta, activeDim, navTargetMode});
+  const role = roleForDim(activeDim);
+  const isFixedAxis = activeDim === T_DIM || activeDim === A_DIM;
+  if(role === null && !isFixedAxis){
+    showToast("CAN'T MOVE THAT WAY");
+    return;
+  }
+  pos[activeDim] += delta;
+
+  if(activeDim === T_DIM && delta < 0) timeSec -= 1;
+  else timeSec += 1; // every other kind of move advances the clock too
+  renderTemporalHud();
+  checkTimeParadox();
+  if(gameOver) return; // meeting your own ghost ends the run right here
+
+  hopDir = delta;
+  hopAnim = 1;
+  hopAxisRole = role;
+  // If this move just collected a coin -- directly, or by landing on one
+  // right after a vibrating-string jump -- that toast owns this move.
+  // checkAttributeSpeech would otherwise immediately see the same coin as
+  // already "claimed" and silently overwrite it in the same breath.
+  const collectedDirectly = checkCollect();
+  const collectedViaTeleport = checkVibratingString();
+  if(!collectedDirectly && !collectedViaTeleport) checkAttributeSpeech();
+  renderVec();
+  renderDimList();
+  renderAxisDimsPanel();
+  renderScore();
+  checkWin();
+}
+
+function currentBraneDims(){
+  return [dimIndexOf(bX), dimIndexOf(bY), dimIndexOf(bZ)];
+}
+
+// ChumpMan is recorded at every second he's ever occupied. The first time a
+// second is reached, this just files away where he stood -- and which 3
+// dimensions were on X/Y/Z at that moment, i.e. which of his dimensions
+// that ghost is actually "visible" in. Reaching a second a second time --
+// only possible after winding T backward and walking forward through it
+// again -- means his ghost from back then is out there somewhere. Danger
+// only exists on whichever of the ghost's original dimensions still happen
+// to be on the player's CURRENT X/Y/Z: an exact position match on that
+// overlap is a hit, worth one point per overlapping dimension.
+function currentBraneOverlap(ghost){
+  const curDims = currentBraneDims();
+  return ghost.dims.filter(d => curDims.includes(d));
+}
+
+function checkTimeParadox(){
+  timeSecondRevisited = timeHistory.has(timeSec);
+  if(timeSecondRevisited){
+    const ghost = timeHistory.get(timeSec);
+    const overlap = currentBraneOverlap(ghost);
+    // Still mid-transit on T (or steering A) -- not actually standing in a
+    // brane yet, so the ghost can't land a hit no matter how the dimensions
+    // line up. Only a real encounter, once back in ordinary Space Mode,
+    // counts.
+    const exactHit = controlMode === 'XYZ' && overlap.length > 0 && overlap.every(d => pos[d] === ghost.pos[d]);
+    if(exactHit){
+      hitPoints += overlap.length;
+      if(hitPoints >= 3) triggerGameOver();
+      else if(hitPoints === 2){
+        showToast("YOU: DON'T GET SO CLOSE, ONCE MORE AND YOU'RE DONE!", 5000);
+        freezeInput(5000);
+        showSightLines(overlap.length, 5000);
+      } else if(hitPoints === 1){
+        showToast("YOU: DON'T GET SO CLOSE, THAT'S ONE WARNING!", 5000);
+        freezeInput(5000);
+        showSightLines(overlap.length, 5000);
+      }
+    }
+  } else {
+    timeHistory.set(timeSec, {pos: pos.slice(), dims: currentBraneDims()});
+  }
+}
+
+function triggerGameOver(){
+  gameOver = true;
+  showToast("GAME OVER, YOU MET ANTI-YOU");
+  const finalScore = Math.round(coinsCollected * pointsPerCoin(timeSec));
+  document.getElementById('gameOverScore').textContent = finalScore;
+  document.getElementById('gameOverScreen').style.display = 'flex';
+}
+
+function checkCollect(){
+  let collected = false;
+  coins.forEach(c=>{
+    if(c.got) return;
+    if(coinVisibility(c) !== 3) return;
+    if(c.pos.every((v,i)=> v===0 || v===pos[i])){
+      c.got = true;
+      coinsCollected++;
+      collected = true;
+      showToast("COIN COLLECTED! "+coinsCollected+"/"+coins.length);
+      document.getElementById('coinCount').textContent = coinsCollected+" / "+coins.length;
+    }
+  });
+  return collected;
+}
+
+// Where a hidden coin's stand-in ("thing made real") actually sits right
+// now -- disguise (whale/plant/cat/alien/vibrating string) or a resolved
+// chute/ladder alike. Each is just three fixed offset VALUES, always
+// reprojected onto whichever three dimensions are CURRENTLY on the X/Y/Z
+// screen axes. That's what guarantees anything actually rendered as an
+// attribute in the current view is always reachable there by walking
+// straight to it -- no bent arrows for an axis a visible attribute doesn't
+// need, no matter how the axes get rotated afterward.
+function effectiveAnchor(c){
+  const v = zeros();
+  v[dimIndexOf(bX)] = c.anchorOffsets[0];
+  v[dimIndexOf(bY)] = c.anchorOffsets[1];
+  v[dimIndexOf(bZ)] = c.anchorOffsets[2];
+  return v;
+}
+
+// A hidden coin standing in as a VIBRATING STRING, touched at its exact
+// anchor spot, teleports ChumpMan's coordinates on the three CURRENT screen
+// axes to a new triplet -- then the string permanently becomes a CHUTE (no
+// coin visible in 3 dims from the new spot) or a LADDER (at least one is).
+function checkVibratingString(){
+  for(let i=0;i<coins.length;i++){
+    const c = coins[i];
+    if(c.got || c.portalResolved) continue;
+    if(coinVisibility(c) !== 0) continue;
+    const type = attrTypeFor(i, Math.round(pos[A_DIM]), dim8InView());
+    if(type !== 'vibratingString') continue;
+    const anchor = effectiveAnchor(c);
+    if(!anchor.every((v,idx)=> v===0 || v===pos[idx])) continue;
+    return teleportViaString(c); // at most one jump per move -- avoids chain reactions
+  }
+  return false;
+}
+
+// What each "thing made real" says when ChumpMan is standing exactly where
+// it is. The dead cat doesn't get a line -- see checkAttributeSpeech.
+// vibratingString has no line -- it just does its teleport. A live coin
+// (visible in >=1 of its own dims) has no line either -- it's just there to
+// collect.
+const ATTR_SPEECH = {
+  whale:      '"I KNOW, RANDOM, RIGHT?"',
+  plant:      '"ARE YOU MY NEMESIS?"',
+  alienBad:   '"I NEED TO GET TO MY PLANET REAL SOON."',
+  alienGood:  '"YOU HAVE TO STOP THE TRICKY RED ALIEN FROM GETTING TO MY PLANET!"',
+  catAlive:   '"PURRRRRRRRRRR."',
+  catDead:    "...IT SMELLS TERRIBLE HERE.",
+  chute:      "YOU SEE A CHUTE.",
+  ladder:     "YOU SEE A LADDER.",
+  claimed:    "THIS IS WHERE YOU CLAIMED A COIN SOMEWHERE IN SPACETIME PROBABILITY."
+};
+// Only the types that actually TALK (a quoted line) get a "Name: " prefix.
+// The dead cat's smell note, chute/ladder's sighting, and the claimed marker
+// are observations about the scene, not something speaking, so they stay
+// unprefixed.
+const ATTR_SPEAKER_NAME = {
+  whale: "Whale",
+  plant: "Plant",
+  alienBad: "Tricky Red Alien",
+  alienGood: "Black Alien",
+  catAlive: "Cat"
+};
+
+function checkAttributeSpeech(){
+  const aCoord = Math.round(pos[A_DIM]);
+  const dim8Visible = dim8InView();
+  for(let i=0;i<coins.length;i++){
+    const c = coins[i];
+    let type, target;
+    if(c.got){
+      // Claimed always shows regardless of visibility -- see the render
+      // loop's own priority -- so it's checked the same way here.
+      type = 'claimed';
+      target = coinVisibility(c) >= 1 ? c.pos : effectiveAnchor(c);
+    } else if(coinVisibility(c) !== 0){
+      continue; // showing as a real coin right now -- nothing to say, just collect it
+    } else {
+      type = c.portalResolved || attrTypeFor(i, aCoord, dim8Visible);
+      target = effectiveAnchor(c);
+    }
+    const msg = ATTR_SPEECH[type];
+    if(!msg) continue;
+    if(!target.every((v,idx)=> v===0 || v===pos[idx])) continue;
+    const name = ATTR_SPEAKER_NAME[type];
+    showToast(name ? (name + ": " + msg) : msg);
+    return; // one voice at a time
+  }
+}
+
+function teleportViaString(c){
+  __diagLog('teleport-start', { fromDims: [dimIndexOf(bX), dimIndexOf(bY), dimIndexOf(bZ)], navTargetMode });
+  // A vibrating string jumps between X/Y/Z *combinations*, not just a new
+  // spot within the current one -- three fresh dimensions land straight on
+  // the screen axes (an abrupt external jolt, not a deliberate console
+  // rotation, so no slow slerp -- any rotation already in flight is cut
+  // short) and the Current Axis Dimensions panel updates right along with it.
+  rotAnim = null;
+  selectedAxisSource = null;
+  // Keep the touched coin's OWN three dimensions out of the draw -- landing
+  // on one by chance would make coinVisibility(c) jump above 0, and the
+  // render loop always draws a partially/fully visible coin as a plain coin
+  // icon, silently overriding the chute/ladder it just became right at the
+  // moment it should be showing.
+  const ownDims = new Set(c.pos.map((v,i)=> v!==0 ? i : -1).filter(i=>i>=0));
+  const [dimX, dimY, dimZ] = shuffledDims().filter(d => !ownDims.has(d));
+  __diagLog('teleport-newDims', { dimX, dimY, dimZ });
+  bX = oneHot(dimX); bY = oneHot(dimY); bZ = oneHot(dimZ);
+  const nx = randSigned(1,7), ny = randSigned(1,7), nz = randSigned(1,7);
+  pos[dimX] = nx; pos[dimY] = ny; pos[dimZ] = nz;
+  camPos[dimX] = nx; camPos[dimY] = ny; camPos[dimZ] = nz;
+  // The marker travels with ChumpMan -- it resolves to a chute/ladder sitting
+  // exactly at the spot he lands on, not back where the string used to be.
+  // Stored as offsets (like any other attribute anchor), not a fixed vector,
+  // so it keeps reprojecting onto whatever's on X/Y/Z from here on.
+  c.anchorOffsets = [nx, ny, nz];
+  const landedOnLadder = coins.some(cc => !cc.got && coinVisibility(cc) === 3);
+  c.portalResolved = landedOnLadder ? 'ladder' : 'chute';
+  showToast(landedOnLadder ? "VIBRATING STRING → LADDER!" : "VIBRATING STRING → CHUTE!");
+  return checkCollect();
+}
+
+function checkWin(){
+  if(!cleared && coinsCollected===coins.length && pos.every(v=>v===0)){
+    cleared = true;
+    document.getElementById('clearedTag').style.opacity = 1;
+    showToast("HYPERSPACE CLEARED!");
+  }
+}
+
+function refreshActiveDimLabel(){
+  const isFixedAxis = activeDim === T_DIM || activeDim === A_DIM;
+  const locked = !isFixedAxis && roleForDim(activeDim) === null;
+  document.getElementById('activeDimLabel').textContent = ORDINAL[activeDim] + (locked ? " 🔒" : "");
+}
+
+function setActiveDim(i){
+  activeDim = i;
+  refreshActiveDimLabel();
+  renderDimList();
+  renderVec();
+}
+
+// Steps whichever hidden dimension currently sits on the given screen axis
+// (X, Y or Z) -- the shared path for mouse drag, wheel and the X/Y/Z arrow
+// and quote keys, so all of them "mirror" the same underlying motion.
+function moveAxisRole(role, delta){
+  if(rotAnim) return;
+  const vec = role==='X' ? bX : (role==='Y' ? bY : bZ);
+  const dim = dimIndexOf(vec);
+  if(dim !== activeDim){
+    activeDim = dim;
+    refreshActiveDimLabel();
+  }
+  move(delta);
+}
+
+// Left-right input (mouse dx, Left/Right arrows) goes to X in XYZ mode, or
+// straight to T/A while that mode is active -- left = before/one direction,
+// right = after/the other, same sign convention as X's left-right.
+function moveLeftRight(delta){
+  if(controlMode === 'T' || controlMode === 'A'){
+    const dim = controlMode === 'T' ? T_DIM : A_DIM;
+    if(dim !== activeDim){ activeDim = dim; refreshActiveDimLabel(); }
+    move(delta);
+    return;
+  }
+  moveAxisRole('X', delta);
+}
+
+function updateModeHud(){
+  const xyzRows = document.querySelectorAll('#axisKey .xyzrow');
+  const modeRow = document.getElementById('modeRow');
+  if(controlMode === 'XYZ'){
+    xyzRows.forEach(r=>r.classList.remove('dim'));
+    modeRow.style.display = 'none';
+  } else {
+    xyzRows.forEach(r=>r.classList.add('dim'));
+    modeRow.style.display = '';
+    modeRow.textContent = controlMode === 'T'
+      ? "T — ◄ before · after ►  (S = space)"
+      : "A — ◄ · ►  (S = space)";
+  }
+}
+
+function setControlMode(mode){
+  if(controlMode === mode) return;
+  controlMode = mode;
+  activeDim = mode==='T' ? T_DIM : mode==='A' ? A_DIM : dimIndexOf(bX);
+  refreshActiveDimLabel();
+  renderDimList();
+  renderVec();
+  updateModeHud();
+  showToast(
+    mode==='T' ? "TIME MODE — LEFT/RIGHT = BEFORE/AFTER" :
+    mode==='A' ? "ATTRIBUTE MODE — LEFT / RIGHT" :
+    "SPACE MODE"
+  );
+}
+
+function renderDimList(){
+  const list = document.getElementById('dimlist');
+  list.innerHTML = "";
+  for(let i=0;i<N;i++){
+    const row = document.createElement('div');
+    row.className = "dimrow" + (i===activeDim ? " active":"");
+    const tag = axisTagFor(i);
+    let tagCls = tag.cls;
+    if(selectedAxisSource){
+      if(i===selectedAxisSource.dim) tagCls += " selected";
+      else if(tag.cls==="on" || tag.cls==="fixed") tagCls += " invalid";
+      else tagCls += " target";
+    }
+    const pv = pos[i];
+    const pvCls = pv>0 ? "pos" : (pv<0 ? "neg" : "");
+    const nm = i===T_DIM ? "Time"
+             : i===A_DIM ? "Attributes"
+             : ORDINAL[i]+" Dimension";
+    const ht = i===T_DIM ? "T then ◄/► — left=before · right=after"
+             : i===A_DIM ? "A then ◄/► — cycles attributes"
+             : i===DIM8 ? "Dimension 8 — unlocks space aliens"
+             : "Dimension "+(i+1);
+    row.innerHTML = `
+      <div class="key">${KEYS[i].toUpperCase()}</div>
+      <div class="info">
+        <div class="name">${nm}</div>
+        <div class="hint">${ht}</div>
+      </div>
+      <div class="posval ${pvCls}">${pv>0?"+"+pv:pv}</div>
+      <div class="axis-tag ${tagCls}" data-dim="${i}">${tag.label}</div>
+    `;
+    row.addEventListener('click', (ev)=>{
+      if(ev.target.classList.contains('axis-tag')) return;
+      setActiveDim(i);
+    });
+    row.querySelector('.axis-tag').addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      handleAxisTagClick(i);
+    });
+    list.appendChild(row);
+  }
+}
+
+function renderVec(){
+  const vl = document.getElementById('vecline');
+  vl.innerHTML = "";
+  for(let i=0;i<N;i++){
+    const tag = axisTagFor(i);
+    const cell = document.createElement('div');
+    cell.className = "cell" + (i===activeDim?" active":"") + ((tag.cls==="on"||tag.cls==="fixed")?" visible":"");
+    const dLabel = i===T_DIM ? "T" : i===A_DIM ? "A" : "D"+(i+1);
+    cell.innerHTML = `<div class="d">${dLabel}</div>${pos[i]}`;
+    vl.appendChild(cell);
+  }
+}
+
+document.getElementById('btnLeft').addEventListener('click', ()=>move(-1));
+document.getElementById('btnRight').addEventListener('click', ()=>move(1));
+document.getElementById('trackBtnV').addEventListener('click', trackVibratingString);
+document.getElementById('trackBtnC').addEventListener('click', trackCoin);
+document.getElementById('trackBtnB').addEventListener('click', trackNearest);
+function resetRun(){
+  pos = zeros();
+  camPos = zeros();
+  makeLevel();
+  timeSec = 0;
+  // Deliberately NOT pre-recorded -- the very first second of a run isn't
+  // "lived" yet in any sense that could paradox with. Recording it up front
+  // would plant a ghost at the origin before the player has done anything,
+  // so simply tapping T forward then back (an obvious first thing to try)
+  // would land exactly on it and end the run before it began.
+  timeHistory = new Map();
+  timeSecondRevisited = false;
+  hitPoints = 0;
+  inputFrozenUntil = 0;
+  sightLineUntil = 0;
+  gameOver = false;
+  document.getElementById('gameOverScreen').style.display = 'none';
+  controlMode = 'XYZ';
+  navTargetMode = 'nearest';
+  renderNavModeTag();
+  activeDim = dimIndexOf(bX);
+  updateModeHud();
+  renderTemporalHud();
+  renderScore();
+  document.getElementById('coinCount').textContent = "0 / "+coins.length;
+  document.getElementById('clearedTag').style.opacity = 0;
+  refreshActiveDimLabel();
+  renderVec();
+  renderDimList();
+  renderAxisDimsPanel();
+}
+document.getElementById('resetBtn').addEventListener('click', resetRun);
+document.getElementById('gameOverRetry').addEventListener('click', resetRun);
+
+window.addEventListener('keydown', (e)=>{
+  if(!introDismissed){
+    if(e.key === "Enter" || e.key === " " || e.key === "Escape"){
+      e.preventDefault();
+      document.getElementById('introContinue').click();
+    }
+    return;
+  }
+  if(gameOver){
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      document.getElementById('gameOverRetry').click();
+    }
+    return;
+  }
+  const key = e.key.toLowerCase();
+  __diagLog('keydown', key);
+  // T / A: narrow left-right input onto the Time or Attributes axis. S: back
+  // to X/Y/Z steering the mouse and left-right/back-forward/wheel as usual.
+  if(key==='t'){ e.preventDefault(); setControlMode('T'); return; }
+  if(key==='a'){ e.preventDefault(); setControlMode('A'); return; }
+  if(key==='s'){ e.preventDefault(); setControlMode('XYZ'); return; }
+  // V / C / B: point the nav arrows at the nearest vibrating string, the
+  // nearest fully-visible (collectible) coin, or the nearest object of any
+  // kind respectively -- same as clicking the V / C / B buttons.
+  if(key==='v'){ e.preventDefault(); trackVibratingString(); return; }
+  if(key==='c'){ e.preventDefault(); trackCoin(); return; }
+  if(key==='b'){ e.preventDefault(); trackNearest(); return; }
+  // X / Y / Z: pick that screen axis for reassignment (same as clicking its
+  // lit box in the Dimension Console) -- a following 1-9 digit sends it to
+  // a new hidden dimension.
+  if(key==='x' || key==='y' || key==='z'){
+    e.preventDefault();
+    const vec = key==='x' ? bX : (key==='y' ? bY : bZ);
+    handleAxisTagClick(dimIndexOf(vec));
+    return;
+  }
+  // Left/Right mirror mouse dx (X, or T/A while that mode is active) -- they
+  // always mean something, in every mode. Down/Up and the quote keys only
+  // ever mean Y/Z, which T and A have no use for at all, so rather than
+  // mutely eating them (the old behavior), pressing one now drops back to
+  // Space Mode first and then makes the move -- the same "get me back to
+  // normal movement" courtesy V/C already do.
+  if(e.key === "ArrowLeft"){ e.preventDefault(); moveLeftRight(-1); return; }
+  if(e.key === "ArrowRight"){ e.preventDefault(); moveLeftRight(1); return; }
+  if(e.key === "ArrowDown"){ e.preventDefault(); setControlMode('XYZ'); moveAxisRole('Y', -1); return; }
+  if(e.key === "ArrowUp"){ e.preventDefault(); setControlMode('XYZ'); moveAxisRole('Y', 1); return; }
+  if(e.key === "/"){ e.preventDefault(); setControlMode('XYZ'); moveAxisRole('Z', -1); return; }
+  if(e.key === "'"){ e.preventDefault(); setControlMode('XYZ'); moveAxisRole('Z', 1); return; }
+
+  const idx = KEYS.indexOf(key);
+  if(idx >= 0){
+    // A pending X/Y/Z selection turns a digit into a reassignment target
+    // instead of an active-dimension pick.
+    if(selectedAxisSource) handleAxisTagClick(idx);
+    else setActiveDim(idx);
+  }
+});
+
+document.getElementById('introContinue').addEventListener('click', ()=>{
+  document.getElementById('introScreen').style.display = 'none';
+  introDismissed = true;
+});
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const SCALE = 46;
+
+/* ===================================================================
+   Mouse & wheel -- X/left-right, Y/back-forward, Z/scroll up-down
+   =================================================================== */
+const MOUSE_STEP_PX = 26;   // pixels of mouse drag per one-unit step
+const WHEEL_COOLDOWN = 90;  // ms between wheel-driven steps
+// A fast physical flick can report a huge movementX/Y in one event; without
+// a cap that fires many one-unit steps back-to-back, in the same JS tick,
+// before the camera (which only updates once per animation frame) has any
+// chance to keep up -- see CAMERA_SNAP_THRESHOLD.
+const MAX_MOUSE_DELTA = 4*MOUSE_STEP_PX;
+const mouseHint = document.getElementById('mouseHint');
+const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+if(isCoarsePointer && mouseHint) mouseHint.textContent = "move with the Dimension Console below";
+let mouseLocked = false;
+let mouseAccumX = 0, mouseAccumY = 0;
+let lastWheelStep = 0;
+
+function clampMouseDelta(v){
+  return Math.max(-MAX_MOUSE_DELTA, Math.min(MAX_MOUSE_DELTA, v));
+}
+
+canvas.style.cursor = 'pointer';
+canvas.addEventListener('click', ()=>{
+  if(!isCoarsePointer && introDismissed && document.pointerLockElement !== canvas) canvas.requestPointerLock();
+});
+document.addEventListener('pointerlockchange', ()=>{
+  mouseLocked = document.pointerLockElement === canvas;
+  if(mouseHint) mouseHint.classList.toggle('locked', mouseLocked);
+  mouseAccumX = 0; mouseAccumY = 0;
+});
+document.addEventListener('mousemove', (e)=>{
+  if(!mouseLocked || !introDismissed || gameOver) return;
+  // T/A mode only listens to left-right, and is unaffected by the X/Y/Z
+  // axis-rotation animation since it never touches bX/bY/bZ.
+  if(controlMode !== 'XYZ'){
+    mouseAccumX += clampMouseDelta(e.movementX);
+    while(mouseAccumX >= MOUSE_STEP_PX){ moveLeftRight(1); mouseAccumX -= MOUSE_STEP_PX; }
+    while(mouseAccumX <= -MOUSE_STEP_PX){ moveLeftRight(-1); mouseAccumX += MOUSE_STEP_PX; }
+    return;
+  }
+  if(rotAnim) return;
+  mouseAccumX += clampMouseDelta(e.movementX);
+  mouseAccumY += clampMouseDelta(e.movementY);
+  while(mouseAccumX >= MOUSE_STEP_PX){ moveLeftRight(1); mouseAccumX -= MOUSE_STEP_PX; }
+  while(mouseAccumX <= -MOUSE_STEP_PX){ moveLeftRight(-1); mouseAccumX += MOUSE_STEP_PX; }
+  // Moving the mouse away from you (up the pad, negative movementY) reads
+  // as travelling forward; pulling it toward you reads as backward.
+  while(mouseAccumY <= -MOUSE_STEP_PX){ moveAxisRole('Y', 1); mouseAccumY += MOUSE_STEP_PX; }
+  while(mouseAccumY >= MOUSE_STEP_PX){ moveAxisRole('Y', -1); mouseAccumY -= MOUSE_STEP_PX; }
+});
+canvas.addEventListener('wheel', (e)=>{
+  if(!introDismissed) return;
+  e.preventDefault();
+  if(gameOver || controlMode !== 'XYZ' || rotAnim) return;
+  const now = performance.now();
+  if(now - lastWheelStep < WHEEL_COOLDOWN) return;
+  lastWheelStep = now;
+  // Rolling the wheel backward (toward you, deltaY>0) sinks; forward rises.
+  moveAxisRole('Z', e.deltaY > 0 ? -1 : 1);
+}, { passive:false });
+
+function getHorizon(){
+  const camUp = vDot(camPos, bZ);
+  return Math.max(-H, Math.min(2*H, H*0.62 + camUp*SCALE));
+}
+
+function drawFloor(horizon){
+  ctx.save();
+  ctx.strokeStyle = "rgba(57,195,195,0.22)";
+  ctx.lineWidth = 1;
+  const offX = ((-vDot(camPos,bX)*SCALE) % SCALE + SCALE) % SCALE;
+  const offZ = ((-vDot(camPos,bY)*SCALE*0.6) % (SCALE*0.6) + SCALE*0.6) % (SCALE*0.6);
+  for(let x=-2; x*SCALE+offX < W+SCALE; x++){
+    const sx = x*SCALE+offX;
+    ctx.beginPath();
+    ctx.moveTo(sx, horizon);
+    ctx.lineTo(sx + (sx-W/2)*0.5, H);
+    ctx.stroke();
+  }
+  for(let z=0; z*SCALE*0.6+offZ < H-horizon+SCALE; z++){
+    const sy = horizon + z*SCALE*0.6*0.6+offZ*0.3;
+    ctx.beginPath();
+    ctx.moveTo(0, sy);
+    ctx.lineTo(W, sy);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(11,11,26,0.0)";
+  const grad = ctx.createLinearGradient(0,horizon,0,H);
+  grad.addColorStop(0,"rgba(20,20,50,0.15)");
+  grad.addColorStop(1,"rgba(20,20,50,0.55)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,horizon,W,H-horizon);
+  ctx.restore();
+}
+
+function depthScaleFor(pDepth){
+  // Clamp the denominator so a large depth offset (camera lagging far behind
+  // a big jump) shrinks things toward a small-but-visible scale instead of
+  // crossing zero -- past that point the scale would flip negative or blow
+  // up to +/-Infinity and the sprite would project off-screen and vanish.
+  const denom = 1 + Math.max(0,pDepth)*0.06 + Math.max(0,-pDepth)*-0.03;
+  return 1/Math.max(0.05, denom);
+}
+
+function project(worldPos){
+  const rel = vSub(worldPos, camPos);
+  const px = vDot(rel,bX);      // X: left-right
+  const pDepth = vDot(rel,bY);  // Y: backward-forward
+  const pUp = vDot(rel,bZ);     // Z: down-up
+  const visMag = Math.sqrt(px*px+pDepth*pDepth+pUp*pUp);
+  const totalMag = vNorm(rel);
+  const hidden = Math.max(0, totalMag*totalMag - visMag*visMag);
+  const depthScale = depthScaleFor(pDepth);
+  const sx = W/2 + px*SCALE*depthScale;
+  const sy = H*0.62 - pUp*SCALE*depthScale - pDepth*SCALE*0.18;
+  return {sx,sy,scale:depthScale,hidden,pz:pDepth};
+}
+
+function coinVisibility(coin){
+  let count = 0;
+  for(let i=0;i<N;i++){
+    if(coin.pos[i] !== 0 && axisTagFor(i).cls === 'on') count++;
+  }
+  return count;
+}
+
+const VIS_STYLE = {
+  1: { fill:"#3a6fb0", post:"rgba(0,0,0,0.3)", ring:"#5a94d9", label:"#0b0b1a" },
+  2: { fill:"#8fe0b0", post:"rgba(0,0,0,0.28)", ring:"#c6f5d8", label:"#0b0b1a" },
+  3: { fill:"#e8c84a", post:"#8a6a10",          ring:"#fff2b8", label:"#0b0b1a" }
+};
+
+function drawCoin(c){
+  if(c.got) return;
+  const vis = coinVisibility(c);
+  if(vis === 0) return;
+  const style = VIS_STYLE[vis];
+  const p = project(c.pos);
+  const r = 9*p.scale;
+  ctx.save();
+  ctx.globalAlpha = vis===1 ? (0.4 + 0.15*Math.sin(performance.now()/240)) : (vis===2 ? 0.85 : 1);
+  ctx.fillStyle = style.fill;
+  ctx.beginPath();
+  ctx.ellipse(p.sx, p.sy, r, r*1.15, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = style.post;
+  ctx.fillRect(p.sx-r*0.18, p.sy-r*0.7, r*0.36, r*1.4);
+  if(vis<3){
+    ctx.strokeStyle = style.ring;
+    ctx.setLineDash([3,3]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(p.sx, p.sy, r+4, r*1.15+4, 0, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.globalAlpha = 1;
+  ctx.font = `${Math.max(8,Math.round(9*p.scale))}px 'Press Start 2P', monospace`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = style.label;
+  ctx.fillText(String(vis), p.sx, p.sy+1);
+  ctx.restore();
+}
+
+function drawFlag(){
+  const p = project(flagPos);
+  ctx.save();
+  const active = coinsCollected === coins.length;
+  ctx.strokeStyle = active ? "#5ee6a0" : "#4a4a72";
+  ctx.lineWidth = 3*p.scale;
+  ctx.beginPath();
+  ctx.moveTo(p.sx, p.sy);
+  ctx.lineTo(p.sx, p.sy - 44*p.scale);
+  ctx.stroke();
+  ctx.fillStyle = active ? "#5ee6a0" : "#4a4a72";
+  ctx.beginPath();
+  ctx.moveTo(p.sx, p.sy-44*p.scale);
+  ctx.lineTo(p.sx+20*p.scale, p.sy-36*p.scale);
+  ctx.lineTo(p.sx, p.sy-28*p.scale);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ===================================================================
+   T axis — opaque time-ghost outlines
+   =================================================================== */
+// Outline color mirrors the coin visibility palette (VIS_STYLE) so the
+// player can read danger at a glance: no dimensional overlap with the
+// player's current brane at all -> neutral (harmless, can't be hit); 1/2/3
+// overlapping dimensions -> the same blue/green/gold used for a coin
+// that's 1/2/3-dimensionally visible, since that's exactly how "close" this
+// ghost actually is to landing a hit.
+const GHOST_NEUTRAL = "#cfe8e8";
+function ghostOutlineColor(overlap){
+  return overlap > 0 ? VIS_STYLE[overlap].ring : GHOST_NEUTRAL;
+}
+
+function drawTimeGhost(g){
+  const p = project(g.pos);
+  const s = 3.0*p.scale;
+  const color = ghostOutlineColor(g.overlap||0);
+  ctx.save();
+  ctx.translate(p.sx, p.sy);
+  ctx.imageSmoothingEnabled = false;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1, 1.4*p.scale);
+  ctx.globalAlpha = 1;                        // opaque outline
+  ctx.strokeRect(-7*s, -6*s, 14*s, 6*s);      // torso
+  ctx.strokeRect(-5*s, -10*s, 10*s, 5*s);     // head
+  ctx.strokeRect(-6*s, -11*s, 12*s, 3*s);     // hat brim
+  ctx.strokeRect(-6*s, 0, 5*s, 6*s);          // left leg
+  ctx.strokeRect(1*s, 0, 5*s, 6*s);           // right leg
+  ctx.restore();
+  ctx.save();
+  ctx.font = `${Math.max(7,Math.round(8*p.scale))}px 'Press Start 2P', monospace`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = color;
+  ctx.fillText("t"+(g.second>=0?"+"+g.second:g.second), p.sx, p.sy - 11*s - 3);
+  ctx.restore();
+}
+
+/* ===================================================================
+   A axis — attributes made real (deterministic per A coordinate)
+   =================================================================== */
+// mulberry32 PRNG by Tommy Ettinger, released into the public domain.
+// https://gist.github.com/tommyettinger/46a874533244883189143505d203312c
+function mulberry32(seed){
+  let t = seed >>> 0;
+  return function(){
+    t = (t + 0x6D2B79F5) >>> 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const ATTR_TYPES = ['whale','plant','catAlive','catDead','vibratingString'];
+// Dimension 8 (index DIM8) unlocks two more possibilities while it's rotated
+// onto a screen axis -- a tricky red space alien and a good black space alien.
+const DIM8 = 7; // index of the "8th Dimension"
+const ATTR_TYPES_DIM8 = ATTR_TYPES.concat(['alienBad','alienGood']);
+// 'chute' and 'ladder' are never rolled by attrTypeFor -- a coin only takes
+// one on once its vibrating string has been touched (see teleportViaString).
+// 'claimed' is never rolled by attrTypeFor either -- it's a permanent,
+// deterministic state a coin enters the moment it's collected, same as
+// chute/ladder, and it takes priority over everything else once set.
+const ATTR_LABEL = {
+  whale:"WHALE", plant:"POTTED PLANT", catAlive:"CAT · ALIVE", catDead:"CAT · DEAD",
+  alienBad:"TRICKY RED ALIEN", alienGood:"GOOD BLACK ALIEN",
+  vibratingString:"VIBRATING STRING", chute:"CHUTE", ladder:"LADDER",
+  claimed:"CLAIMED"
+};
+
+function dim8InView(){
+  return axisTagFor(DIM8).cls === 'on';
+}
+
+// Which of the available things stands in for coin i, given the current A
+// position -- pure function of (i, a, dim8Visible): move along A and the
+// stand-ins change; come back to the same A (with dim 8 in the same state)
+// and they are exactly as they were.
+function attrTypeFor(i, a, dim8Visible){
+  const pool = dim8Visible ? ATTR_TYPES_DIM8 : ATTR_TYPES;
+  const rnd = mulberry32((Math.imul(i + 1, 374761393) ^ Math.imul(a | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
+  rnd();
+  return pool[Math.floor(rnd() * pool.length)];
+}
+
+// How many coins are currently out of view (and so drawn as stand-in things).
+function hiddenCoinCount(){
+  let n = 0;
+  coins.forEach(c=>{ if(!c.got && coinVisibility(c) === 0) n++; });
+  return n;
+}
+
+function renderTemporalHud(){
+  const tc = document.getElementById('timeCounter');
+  if(tc) tc.textContent = timeSec + " s";
+  const as = document.getElementById('attrState');
+  if(as){
+    const a = Math.round(pos[A_DIM]);
+    as.textContent = "A " + (a>0?"+"+a:a) + " · " + hiddenCoinCount() + " as things";
+  }
+}
+
+// Score rewards speed, not patience: each coin is worth SCORE_BASE points
+// when the clock is at zero, losing SCORE_DECAY points for every order of
+// magnitude the counter's distance from zero climbs -- so the drop is just
+// as real between the decades (at t=32 or t=-32, roughly halfway between 10
+// and 100 in log terms) as it is right at 10/100/1000, never just a set of
+// step changes. It's symmetric: winding time negative decays the rate
+// exactly like winding it positive does, since only |t| matters. Winding
+// time back toward zero (from either side) raises the rate right back up,
+// since only the CURRENT value of t matters, not how it got there.
+const SCORE_BASE = 100;
+const SCORE_DECAY = 25;
+const SCORE_FLOOR = 1;
+
+function pointsPerCoin(t){
+  const decades = Math.log10(Math.max(1, Math.abs(t)));
+  return Math.max(SCORE_FLOOR, SCORE_BASE - SCORE_DECAY*decades);
+}
+
+function renderScore(){
+  const rate = pointsPerCoin(timeSec);
+  const num = document.getElementById('scoreNum');
+  const rateEl = document.getElementById('scoreRate');
+  if(num) num.textContent = String(Math.round(coinsCollected * rate));
+  if(rateEl) rateEl.textContent = "(" + Math.round(rate) + "/coin)";
+}
+
+function drawWhale(x,y,sc){
+  const u = 22*sc;
+  ctx.save();
+  ctx.translate(x, y - u*0.2);
+  ctx.fillStyle = "#3f6fa8";
+  ctx.beginPath();
+  ctx.ellipse(0,-u*0.5,u,u*0.55,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(u*0.8,-u*0.6);
+  ctx.lineTo(u*1.5,-u*1.05);
+  ctx.lineTo(u*1.5,-u*0.15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#9fc4e0";
+  ctx.beginPath();
+  ctx.ellipse(-u*0.1,-u*0.32,u*0.7,u*0.26,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#bfe3ff";
+  ctx.lineWidth = 2*sc;
+  ctx.beginPath();
+  ctx.moveTo(-u*0.5,-u*1.0);
+  ctx.quadraticCurveTo(-u*0.75,-u*1.5,-u*0.4,-u*1.75);
+  ctx.stroke();
+  ctx.fillStyle = "#0b0b1a";
+  ctx.beginPath();
+  ctx.arc(-u*0.55,-u*0.5,1.6*sc,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPlant(x,y,sc){
+  const u = 20*sc;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = "#b5623a";
+  ctx.beginPath();
+  ctx.moveTo(-u*0.55,0);
+  ctx.lineTo(u*0.55,0);
+  ctx.lineTo(u*0.4,-u*0.7);
+  ctx.lineTo(-u*0.4,-u*0.7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#cf7a4f";
+  ctx.fillRect(-u*0.6,-u*0.85,u*1.2,u*0.2);
+  ctx.fillStyle = "#4c9d5b";
+  for(let i=-1;i<=1;i++){
+    ctx.save();
+    ctx.translate(0,-u*0.8);
+    ctx.rotate(i*0.6);
+    ctx.beginPath();
+    ctx.ellipse(0,-u*0.6,u*0.22,u*0.6,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = "#6fc47f";
+  ctx.beginPath();
+  ctx.ellipse(0,-u*1.5,u*0.2,u*0.5,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCatAlive(x,y,sc){
+  const u = 16*sc;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = "#8a8f98";
+  ctx.beginPath();
+  ctx.moveTo(-u*0.7,0);
+  ctx.quadraticCurveTo(-u*0.95,-u*1.4,0,-u*1.5);
+  ctx.quadraticCurveTo(u*0.95,-u*1.4,u*0.7,0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0,-u*1.7,u*0.6,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-u*0.55,-u*2.05); ctx.lineTo(-u*0.15,-u*2.0); ctx.lineTo(-u*0.4,-u*2.45); ctx.closePath();
+  ctx.moveTo(u*0.55,-u*2.05); ctx.lineTo(u*0.15,-u*2.0); ctx.lineTo(u*0.4,-u*2.45); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#8a8f98";
+  ctx.lineWidth = u*0.3;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(u*0.6,-u*0.1);
+  ctx.quadraticCurveTo(u*1.45,-u*0.3,u*1.1,-u*1.2);
+  ctx.stroke();
+  ctx.fillStyle = "#5ee6a0";              // eyes open, alive
+  ctx.beginPath(); ctx.arc(-u*0.22,-u*1.72,u*0.12,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(u*0.22,-u*1.72,u*0.12,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawCatDead(x,y,sc){
+  const u = 16*sc;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle = "#6b7079";
+  ctx.beginPath();
+  ctx.ellipse(0,-u*0.5,u*1.2,u*0.5,0,0,Math.PI*2);   // body on its back
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-u*1.3,-u*0.5,u*0.55,0,Math.PI*2);         // head
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-u*1.62,-u*0.95); ctx.lineTo(-u*1.2,-u*0.82); ctx.lineTo(-u*1.72,-u*1.28); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#6b7079";
+  ctx.lineWidth = u*0.22;
+  ctx.lineCap = "round";
+  for(let i=-1;i<=1;i+=2){                            // stiff legs in the air
+    ctx.beginPath();
+    ctx.moveTo(i*u*0.35,-u*0.9);
+    ctx.lineTo(i*u*0.45,-u*1.55);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(i*u*0.6,-u*0.9);
+    ctx.lineTo(i*u*0.66,-u*1.48);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#0b0b1a";                        // X-ed out eyes
+  ctx.lineWidth = 1.6*sc;
+  ctx.lineCap = "round";
+  const ex = -u*1.45, ey = -u*0.55, e = u*0.16;
+  ctx.beginPath();
+  ctx.moveTo(ex-e,ey-e); ctx.lineTo(ex+e,ey+e);
+  ctx.moveTo(ex+e,ey-e); ctx.lineTo(ex-e,ey+e);
+  ctx.moveTo(ex-e+u*0.42,ey-e); ctx.lineTo(ex+e+u*0.42,ey+e);
+  ctx.moveTo(ex+e+u*0.42,ey-e); ctx.lineTo(ex-e+u*0.42,ey+e);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawAlienBad(x,y,sc){
+  const u = 16*sc;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.strokeStyle = "#7a1f28";                        // spindly arms
+  ctx.lineWidth = u*0.16;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-u*0.5,-u*0.55); ctx.lineTo(-u*0.95,-u*0.15);
+  ctx.moveTo(u*0.5,-u*0.55); ctx.lineTo(u*0.95,-u*0.15);
+  ctx.stroke();
+  ctx.fillStyle = "#a8323c";                          // hunched body
+  ctx.beginPath();
+  ctx.ellipse(0,-u*0.45,u*0.5,u*0.68,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#d64550";                        // curled antennae
+  ctx.lineWidth = u*0.1;
+  ctx.beginPath();
+  ctx.moveTo(-u*0.28,-u*2.05); ctx.quadraticCurveTo(-u*0.55,-u*2.5,-u*0.3,-u*2.7);
+  ctx.moveTo(u*0.28,-u*2.05); ctx.quadraticCurveTo(u*0.55,-u*2.5,u*0.3,-u*2.7);
+  ctx.stroke();
+  ctx.fillStyle = "#ffd23f";
+  ctx.beginPath(); ctx.arc(-u*0.3,-u*2.72,u*0.1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(u*0.3,-u*2.72,u*0.1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#d64550";                          // bulbous head
+  ctx.beginPath();
+  ctx.ellipse(0,-u*1.55,u*0.65,u*0.58,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.save();                                         // narrowed, glowing eyes
+  ctx.fillStyle = "#fff2b8";
+  ctx.translate(0,-u*1.6);
+  ctx.rotate(-0.25); ctx.beginPath(); ctx.ellipse(-u*0.26,0,u*0.16,u*0.22,0,0,Math.PI*2); ctx.fill();
+  ctx.rotate(0.5); ctx.beginPath(); ctx.ellipse(u*0.26,0,u*0.16,u*0.22,0,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = "#2a0a0c";                          // jagged mouth
+  ctx.beginPath();
+  ctx.moveTo(-u*0.3,-u*1.22); ctx.lineTo(-u*0.15,-u*1.08); ctx.lineTo(0,-u*1.22);
+  ctx.lineTo(u*0.15,-u*1.08); ctx.lineTo(u*0.3,-u*1.22); ctx.lineTo(u*0.3,-u*1.12); ctx.lineTo(-u*0.3,-u*1.12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAlienGood(x,y,sc){
+  const u = 16*sc;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.strokeStyle = "#1c1c30";                        // easy, waving arms
+  ctx.lineWidth = u*0.16;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-u*0.45,-u*0.6); ctx.lineTo(-u*0.7,-u*0.15);
+  ctx.moveTo(u*0.45,-u*0.7); ctx.quadraticCurveTo(u*0.95,-u*0.9,u*0.85,-u*1.4);
+  ctx.stroke();
+  ctx.fillStyle = "#1c1c30";                          // rounded body
+  ctx.beginPath();
+  ctx.ellipse(0,-u*0.5,u*0.5,u*0.7,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#2c2c50";                         // single soft antenna
+  ctx.lineWidth = u*0.1;
+  ctx.beginPath();
+  ctx.moveTo(0,-u*2.3); ctx.lineTo(0,-u*2.7);
+  ctx.stroke();
+  ctx.fillStyle = "#5ee6a0";
+  ctx.beginPath(); ctx.arc(0,-u*2.76,u*0.12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#2c2c50";                          // big round head
+  ctx.beginPath();
+  ctx.arc(0,-u*1.55,u*0.75,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = "#5ee6a0";                          // wide, kind eyes
+  ctx.beginPath(); ctx.ellipse(-u*0.28,-u*1.6,u*0.18,u*0.24,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(u*0.28,-u*1.6,u*0.18,u*0.24,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#0b0b1a";
+  ctx.beginPath(); ctx.arc(-u*0.28,-u*1.56,u*0.06,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(u*0.28,-u*1.56,u*0.06,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#5ee6a0";                        // gentle smile
+  ctx.lineWidth = u*0.08;
+  ctx.beginPath();
+  ctx.arc(0,-u*1.35,u*0.25,0.15*Math.PI,0.85*Math.PI);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawVibratingString(x,y,sc){
+  const u = 16*sc;
+  const t = performance.now()/160;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.strokeStyle = "#8b5cf6";
+  ctx.lineWidth = Math.max(1.4, u*0.14);
+  ctx.lineCap = "round";
+  ctx.shadowColor = "#c4b5fd";
+  ctx.shadowBlur = 6*sc;
+  ctx.beginPath();
+  const topY = -u*2.6, botY = 0, steps = 14;
+  for(let s=0;s<=steps;s++){
+    const f = s/steps;
+    const yy = topY + (botY-topY)*f;
+    const amp = u*0.32*Math.sin(f*Math.PI);   // bulges in the middle, pinned at both ends
+    const xx = amp*Math.sin(f*10 + t);
+    if(s===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#c4b5fd";                  // anchor pegs, top and bottom
+  ctx.beginPath(); ctx.arc(0,topY,u*0.1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,botY,u*0.1,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawChute(x,y,sc){
+  const u = 18*sc;
+  ctx.save();
+  ctx.translate(x, y-u*1.1);
+  ctx.fillStyle = "rgba(214,69,80,0.18)";
+  ctx.strokeStyle = "#d64550";
+  ctx.lineWidth = Math.max(1.2, u*0.09);
+  roundRect(-u*0.75,-u*1.1,u*1.5,u*1.9,u*0.3);
+  ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#f2949c";                // downward arrow -- nothing here
+  ctx.lineWidth = u*0.12;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(0,-u*0.75); ctx.lineTo(0,u*0.45);
+  ctx.moveTo(-u*0.35,u*0.15); ctx.lineTo(0,u*0.5); ctx.lineTo(u*0.35,u*0.15);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLadder(x,y,sc){
+  const u = 18*sc;
+  ctx.save();
+  ctx.translate(x, y-u*1.1);
+  ctx.fillStyle = "rgba(94,230,160,0.18)";
+  ctx.strokeStyle = "#5ee6a0";
+  ctx.lineWidth = Math.max(1.2, u*0.09);
+  roundRect(-u*0.75,-u*1.1,u*1.5,u*1.9,u*0.3);
+  ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#bff5da";                // rails and rungs
+  ctx.lineWidth = u*0.1;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-u*0.3,-u*0.75); ctx.lineTo(-u*0.3,u*0.45);
+  ctx.moveTo(u*0.3,-u*0.75); ctx.lineTo(u*0.3,u*0.45);
+  for(let k=0;k<3;k++){
+    const yy = -u*0.5 + k*u*0.45;
+    ctx.moveTo(-u*0.3,yy); ctx.lineTo(u*0.3,yy);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = "#5ee6a0";                // upward arrow -- something's here
+  ctx.lineWidth = u*0.12;
+  ctx.beginPath();
+  ctx.moveTo(-u*0.32,-u*0.55); ctx.lineTo(0,-u*0.9); ctx.lineTo(u*0.32,-u*0.55);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawClaimedMarker(x,y,sc){
+  // A hollow, dashed husk of a coin -- inert, already spent, never coming
+  // back. Deliberately gets no "becoming real" halo; nothing is becoming
+  // anything here, this spot is just permanently retired.
+  const r = 9*sc;
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  ctx.strokeStyle = "#8a7a4a";
+  ctx.lineWidth = Math.max(1.2, 1.6*sc);
+  ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.ellipse(x, y, r, r*1.15, 0, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.fillRect(x-r*0.18, y-r*0.7, r*0.36, r*1.4);      // faint post, echoing a real coin's
+  ctx.strokeStyle = "#c9b87a";
+  ctx.lineWidth = Math.max(1.4, 1.8*sc);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x-r*0.4, y);
+  ctx.lineTo(x-r*0.1, y+r*0.35);
+  ctx.lineTo(x+r*0.45, y-r*0.4);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawAttrElement(el){
+  const p = project(el.pos);
+  const sc = Math.max(0.4, p.scale);
+  if(el.type !== 'claimed'){
+    ctx.save();
+    ctx.globalAlpha = 0.22;                             // "becoming real" halo
+    ctx.fillStyle = "#39c3c3";
+    ctx.beginPath();
+    ctx.ellipse(p.sx, p.sy - 4*sc, 30*sc, 9*sc, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  if(el.type==='whale') drawWhale(p.sx, p.sy, sc);
+  else if(el.type==='plant') drawPlant(p.sx, p.sy, sc);
+  else if(el.type==='catAlive') drawCatAlive(p.sx, p.sy, sc);
+  else if(el.type==='catDead') drawCatDead(p.sx, p.sy, sc);
+  else if(el.type==='alienBad') drawAlienBad(p.sx, p.sy, sc);
+  else if(el.type==='alienGood') drawAlienGood(p.sx, p.sy, sc);
+  else if(el.type==='vibratingString') drawVibratingString(p.sx, p.sy, sc);
+  else if(el.type==='chute') drawChute(p.sx, p.sy, sc);
+  else if(el.type==='ladder') drawLadder(p.sx, p.sy, sc);
+  else drawClaimedMarker(p.sx, p.sy, sc);
+  ctx.save();
+  ctx.font = `${Math.max(6,Math.round(6*sc))}px 'Press Start 2P', monospace`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(207,232,232,0.75)";
+  ctx.fillText(ATTR_LABEL[el.type], p.sx, p.sy + 5*sc);
+  ctx.restore();
+}
+
+function dimIndexOf(basisVec){
+  let best=-1, bestVal=-1;
+  for(let i=0;i<N;i++){
+    const d = Math.abs(vDot(oneHot(i),basisVec));
+    if(d>bestVal){ bestVal=d; best=i; }
+  }
+  return best;
+}
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawAxisGizmo(){
+  const panelW=168, panelH=112;
+  const px0 = W - panelW - 14, py0 = H - panelH - 14;
+  ctx.save();
+  ctx.fillStyle = "rgba(14,14,34,0.85)";
+  ctx.strokeStyle = "rgba(57,195,195,0.4)";
+  ctx.lineWidth = 1;
+  roundRect(px0, py0, panelW, panelH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = "8px 'JetBrains Mono', monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#7d8bb0";
+  ctx.fillText("SCREEN AXES", px0+8, py0+14);
+
+  const ox = px0 + 128, oy = py0 + 88;
+  const axes = [
+    { role:'left-right', vec:bX, dx:34, dy:0,   color:"#d64550" },
+    { role:'back-forward', vec:bY, dx:-22, dy:-15, color:"#39c3c3" },
+    { role:'down-up', vec:bZ, dx:0,  dy:-36, color:"#5ee6a0" }
+  ];
+  axes.forEach(a=>{
+    const tx = ox+a.dx, ty = oy+a.dy;
+    const dimLabel = String(dimIndexOf(a.vec)+1);
+    ctx.strokeStyle = a.color;
+    ctx.fillStyle = a.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ox,oy);
+    ctx.lineTo(tx,ty);
+    ctx.stroke();
+    const ang = Math.atan2(ty-oy, tx-ox);
+    ctx.beginPath();
+    ctx.moveTo(tx,ty);
+    ctx.lineTo(tx-7*Math.cos(ang-0.4), ty-7*Math.sin(ang-0.4));
+    ctx.lineTo(tx-7*Math.cos(ang+0.4), ty-7*Math.sin(ang+0.4));
+    ctx.closePath();
+    ctx.fill();
+    ctx.font = "9px 'Press Start 2P', monospace";
+    ctx.textAlign = a.dx<0 ? "right" : "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(dimLabel, tx + (a.dx<0?-5:5), ty - (a.dy<0?4:0));
+  });
+  ctx.beginPath();
+  ctx.fillStyle="#cfe8e8";
+  ctx.arc(ox,oy,2.5,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.font = "8px 'JetBrains Mono', monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  let ly = py0+32;
+  axes.forEach(a=>{
+    const dim = dimIndexOf(a.vec);
+    ctx.fillStyle = a.color;
+    ctx.fillText(a.role+" → "+(dim+1), px0+8, ly);
+    ly += 13;
+  });
+  ctx.restore();
+}
+
+function getNearestVisibleCoin(){
+  let best = null, bestD = null;
+  coins.forEach(c=>{
+    if(c.got) return;
+    if(coinVisibility(c) === 0) return;
+    let d = 0;
+    for(let i=0;i<N;i++){
+      if(c.pos[i] !== 0) d += Math.abs(pos[i]-c.pos[i]);
+    }
+    if(bestD===null || d<bestD){ bestD=d; best=c; }
+  });
+  return best ? {coin:best, dist:bestD} : null;
+}
+
+// Broader than getNearestVisibleCoin: considers every element currently on
+// screen, coins and "things made real" alike. A visible coin is targeted at
+// its real position; a fully-hidden one is targeted at the anchor spot its
+// stand-in (whale/alien/vibrating string/chute/ladder/...) is drawn at --
+// exactly matching what the frame loop itself renders there. Used by the nav
+// arrows, which should point at whatever's actually closest, not just coins.
+function getNearestElement(){
+  let best = null, bestD = null, bestTarget = null, bestIsAttr = false;
+  coins.forEach(c=>{
+    if(c.got) return;
+    const visible = coinVisibility(c) >= 1;
+    const target = visible ? c.pos : effectiveAnchor(c);
+    let d = 0;
+    for(let i=0;i<N;i++){
+      if(target[i] !== 0) d += Math.abs(pos[i]-target[i]);
+    }
+    if(bestD===null || d<bestD){ bestD=d; best=c; bestTarget=target; bestIsAttr=!visible; }
+  });
+  return best ? {coin:best, target:bestTarget, dist:bestD, isAttr:bestIsAttr} : null;
+}
+
+// Same shape as getNearestElement, but only ever considers coins currently
+// standing in as a vibrating string (V/C view toggle).
+function getNearestVibratingString(){
+  const aCoord = Math.round(pos[A_DIM]);
+  const dim8Visible = dim8InView();
+  let best = null, bestD = null, bestTarget = null;
+  coins.forEach((c,i)=>{
+    if(c.got || c.portalResolved) return;
+    if(coinVisibility(c) !== 0) return;
+    if(attrTypeFor(i, aCoord, dim8Visible) !== 'vibratingString') return;
+    const target = effectiveAnchor(c);
+    let d = 0;
+    for(let k=0;k<N;k++){
+      if(target[k] !== 0) d += Math.abs(pos[k]-target[k]);
+    }
+    if(bestD===null || d<bestD){ bestD=d; best=c; bestTarget=target; }
+  });
+  return best ? {coin:best, target:bestTarget, dist:bestD, isAttr:true} : null;
+}
+
+// Same shape again, but only ever considers coins fully visible right now
+// (all three of their dimensions on screen axes -- the gold, collectible
+// ones), for the C nav-target mode.
+function getNearestFullyVisibleCoin(){
+  let best = null, bestD = null, bestTarget = null;
+  coins.forEach(c=>{
+    if(c.got) return;
+    if(coinVisibility(c) !== 3) return;
+    let d = 0;
+    for(let i=0;i<N;i++){
+      if(c.pos[i] !== 0) d += Math.abs(pos[i]-c.pos[i]);
+    }
+    if(bestD===null || d<bestD){ bestD=d; best=c; bestTarget=c.pos; }
+  });
+  return best ? {coin:best, target:bestTarget, dist:bestD, isAttr:false} : null;
+}
+
+function renderNavModeTag(){
+  const el = document.getElementById('navModeTag');
+  if(!el) return;
+  el.classList.remove('vstring', 'coin-track');
+  if(navTargetMode === 'vibratingString'){
+    el.textContent = "ARROWS TRACK: VIBRATING STRING";
+    el.classList.add('vstring');
+  } else if(navTargetMode === 'coin'){
+    el.textContent = "ARROWS TRACK: NEAREST COIN";
+    el.classList.add('coin-track');
+  } else {
+    el.textContent = "ARROWS TRACK: CLOSEST";
+  }
+  const btnV = document.getElementById('trackBtnV');
+  const btnC = document.getElementById('trackBtnC');
+  const btnB = document.getElementById('trackBtnB');
+  if(btnV) btnV.classList.toggle('active', navTargetMode==='vibratingString');
+  if(btnV) btnV.classList.toggle('vstring', navTargetMode==='vibratingString');
+  if(btnC) btnC.classList.toggle('active', navTargetMode==='coin');
+  if(btnC) btnC.classList.toggle('coin-track', navTargetMode==='coin');
+  if(btnB) btnB.classList.toggle('active', navTargetMode==='nearest');
+}
+
+// Shared by the V/C/B keys and the matching on-screen buttons -- point the
+// nav arrows at the nearest vibrating string, the nearest fully-visible
+// (collectible) coin, or the nearest object of any kind.
+function trackVibratingString(){
+  // The point of tracking something is to go walk to it -- drop out of T/A
+  // mode first so left-right/back-forward/wheel all drive X/Y/Z again,
+  // rather than leaving whichever of those was muted before.
+  setControlMode('XYZ');
+  if(getNearestVibratingString()){
+    navTargetMode = 'vibratingString';
+    showToast("TRACKING NEAREST VIBRATING STRING");
+  } else {
+    navTargetMode = 'nearest';
+    showToast("THERE ARE NO VIBRATING STRINGS IN THIS 3D BRANE");
+  }
+  renderNavModeTag();
+}
+function trackCoin(){
+  setControlMode('XYZ');
+  if(getNearestFullyVisibleCoin()){
+    navTargetMode = 'coin';
+    showToast("TRACKING NEAREST COIN");
+  } else {
+    navTargetMode = 'nearest';
+    showToast("THERE ARE NO FULLY VISIBLE COINS IN THIS 3D BRANE");
+  }
+  renderNavModeTag();
+}
+function trackNearest(){
+  setControlMode('XYZ');
+  navTargetMode = 'nearest';
+  renderNavModeTag();
+  showToast("TRACKING NEAREST OBJECT");
+}
+
+function renderAxisDimsPanel(){
+  const el = document.getElementById('axisDimsVec');
+  if(!el) return;
+  el.innerHTML = "";
+  const AXES = [
+    { label:'X', color:"#d64550", vec:bX },
+    { label:'Y', color:"#39c3c3", vec:bY },
+    { label:'Z', color:"#5ee6a0", vec:bZ }
+  ];
+  AXES.forEach(a=>{
+    const dim = dimIndexOf(a.vec);
+    const cell = document.createElement('div');
+    cell.className = "cell";
+    cell.style.borderColor = a.color;
+    cell.style.color = a.color;
+    cell.innerHTML = `<div class="d">${a.label}</div>${ORDINAL[dim]}`;
+    el.appendChild(cell);
+  });
+}
+
+function drawNearestCoinBadge(sx, sy){
+  const info = getNearestVisibleCoin();
+  if(!info) return;
+  const d = info.dist;
+  const bx = sx+42, by = sy-66;
+  ctx.save();
+  ctx.fillStyle = "rgba(14,14,34,0.88)";
+  ctx.strokeStyle = "#e8c84a";
+  ctx.lineWidth = 1.5;
+  roundRect(bx-15, by-11, 30, 22, 5);
+  ctx.fill();
+  ctx.stroke();
+  ctx.font = "10px 'Press Start 2P', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#e8c84a";
+  ctx.fillText(String(d), bx, by+1);
+  ctx.restore();
+}
+
+// Small compass arrows radiating from ChumpMan, one per screen axis, pointing
+// toward the nearest visible coin along that axis. X and Z point straight
+// (screen left-right / up-down); Y points along the same up-left/down-right
+// diagonal the axis gizmo already uses for "back-forward". When that axis
+// isn't one of the coin's relevant dimensions at all -- so walking it can't
+// make progress, the rest of the distance being hidden on a dimension not
+// currently on any screen axis -- there's no straight line to draw, so the
+// arrow kinks partway instead of running straight.
+//
+// Every glyph's visible stroke starts partway out (STEM_START_FRAC of the
+// total reach) rather than at ChumpMan's own center, and the total reach is
+// sized off his own sprite radius -- his body is roughly 7*s wide and 17*s
+// tall (see drawPlayer) -- so at least the outer stretch of all three always
+// clears his silhouette instead of being drawn entirely underneath him.
+const NAV_AXES = [
+  { role:'X', color:"#d64550", dx:1,    dy:0    },
+  { role:'Y', color:"#39c3c3", dx:-0.7, dy:-0.5 },
+  { role:'Z', color:"#5ee6a0", dx:0,    dy:-1   }
+];
+const NAV_STEM_START_FRAC = 0.55;
+
+// A small outlined number just past an arrow's tip -- how many steps that
+// direction still needs. The dark stroke-before-fill halo keeps it legible
+// over both the dark sky and the light floor.
+function drawStepLabel(tx,ty,dx,dy,text,color){
+  // An opaque badge (not just outlined text) so the number reads clearly
+  // against sky, floor, or an arrow of its own color alike.
+  const mag = Math.hypot(dx,dy) || 1;
+  const lx = tx + (dx/mag)*20, ly = ty + (dy/mag)*20;
+  ctx.save();
+  ctx.font = "15px 'Press Start 2P', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const r = Math.max(14, ctx.measureText(text).width/2 + 7.5);
+  ctx.fillStyle = "rgba(6,6,18,0.94)";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.arc(lx, ly, r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(text, lx, ly+1);
+  ctx.restore();
+}
+
+function drawArrowGlyph(dx,dy,len,startFrac,color,w,steps){
+  const fx = dx*len*startFrac, fy = dy*len*startFrac;
+  const tx = dx*len, ty = dy*len;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = w;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(fx,fy);
+  ctx.lineTo(tx,ty);
+  ctx.stroke();
+  const ang = Math.atan2(ty-fy,tx-fx);
+  const head = Math.max(4, w*2.6);
+  ctx.beginPath();
+  ctx.moveTo(tx,ty);
+  ctx.lineTo(tx-head*Math.cos(ang-0.45), ty-head*Math.sin(ang-0.45));
+  ctx.lineTo(tx-head*Math.cos(ang+0.45), ty-head*Math.sin(ang+0.45));
+  ctx.closePath();
+  ctx.fill();
+  if(steps != null) drawStepLabel(tx, ty, dx, dy, String(steps), color);
+}
+
+function drawBentStub(dx,dy,len,startFrac,color,w){
+  const fx = dx*len*startFrac, fy = dy*len*startFrac;
+  const midX = dx*len*(startFrac+0.22), midY = dy*len*(startFrac+0.22);
+  const perpX = -dy, perpY = dx;
+  const kink = len*0.3;
+  const endX = midX + perpX*kink, endY = midY + perpY*kink;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = w;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(fx,fy);
+  ctx.lineTo(midX,midY);
+  ctx.lineTo(endX,endY);
+  ctx.stroke();
+  const ang = Math.atan2(endY-midY, endX-midX);
+  const head = Math.max(4, w*2.2);
+  ctx.beginPath();
+  ctx.moveTo(endX,endY);
+  ctx.lineTo(endX-head*Math.cos(ang-0.45), endY-head*Math.sin(ang-0.45));
+  ctx.lineTo(endX-head*Math.cos(ang+0.45), endY-head*Math.sin(ang+0.45));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAlignedMark(dx,dy,len,color,w){
+  const mx = dx*len*0.8, my = dy*len*0.8;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = Math.max(1.6, w*0.9);
+  ctx.beginPath();
+  ctx.arc(mx, my, Math.max(3.5, w*1.7), 0, Math.PI*2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(mx, my, Math.max(1.4, w*0.7), 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  drawStepLabel(mx, my, dx, dy, "0", color);
+}
+
+function drawNavArrows(sx, sy, baseScale){
+  let info;
+  if(navTargetMode === 'vibratingString'){
+    info = getNearestVibratingString();
+    if(!info){
+      // The tracked string vanished (touched, resolved, or A moved on) --
+      // fall back once, right here, rather than on some later move.
+      __diagLog('nav-autofallback', { from:'vibratingString', dims: [dimIndexOf(bX), dimIndexOf(bY), dimIndexOf(bZ)] });
+      navTargetMode = 'nearest';
+      renderNavModeTag();
+      showToast("THERE ARE NO VIBRATING STRINGS IN THIS 3D BRANE");
+      info = getNearestElement();
+    }
+  } else if(navTargetMode === 'coin'){
+    info = getNearestFullyVisibleCoin();
+    if(!info){
+      // The tracked coin got collected, or nothing is fully visible anymore
+      // -- same one-time fallback as the vibrating-string case.
+      __diagLog('nav-autofallback', { from:'coin', dims: [dimIndexOf(bX), dimIndexOf(bY), dimIndexOf(bZ)] });
+      navTargetMode = 'nearest';
+      renderNavModeTag();
+      showToast("THERE ARE NO FULLY VISIBLE COINS IN THIS 3D BRANE");
+      info = getNearestElement();
+    }
+  } else {
+    info = getNearestElement();
+  }
+  if(!info) return;
+  const target = info.target;
+  const sc = Math.max(0.5, baseScale);
+  const bodyHalfWidth = 7*3.2*sc;         // matches ChumpMan's own half-width (7*s)
+  const armLen = bodyHalfWidth + 26;      // reach well past his silhouette in every direction
+  const w = Math.max(1.6, 2.2*sc);
+  ctx.save();
+  ctx.translate(sx, sy - 8*sc);
+  NAV_AXES.forEach(a=>{
+    const vec = a.role==='X' ? bX : (a.role==='Y' ? bY : bZ);
+    const dim = dimIndexOf(vec);
+    const relevant = target[dim] !== 0;
+    if(!relevant){
+      drawBentStub(a.dx, a.dy, armLen, NAV_STEM_START_FRAC, a.color, w);
+      return;
+    }
+    const diff = target[dim] - pos[dim];
+    if(diff === 0){
+      drawAlignedMark(a.dx, a.dy, armLen, a.color, w);
+      return;
+    }
+    const sign = diff > 0 ? 1 : -1;
+    drawArrowGlyph(a.dx*sign, a.dy*sign, armLen, NAV_STEM_START_FRAC, a.color, w, Math.abs(diff));
+  });
+  ctx.restore();
+}
+
+function drawPlayer(){
+  const relX = vDot(vSub(pos,camPos), bX);
+  const relDepth = vDot(vSub(pos,camPos), bY);
+  const relUp = vDot(vSub(pos,camPos), bZ);
+  const baseScale = depthScaleFor(relDepth);
+  const baseX = W/2 + relX*SCALE;
+  const baseY = H*0.62 - relUp*SCALE;
+
+  const env = hopAnim>0 ? Math.sin((1-hopAnim)*Math.PI) : 0;
+  let bounce = 0, lungeX = 0, lungeY = 0, hopPulse = 1;
+  if(hopAxisRole === 'Z'){
+    lungeY = -hopDir*env*8;
+    bounce = env*4;
+  } else {
+    bounce = env*10;
+    if(hopAxisRole === 'X') lungeX = hopDir*env*8;
+    else if(hopAxisRole === 'Y') hopPulse = 1 + hopDir*env*0.12;
+  }
+  const sxFinal = baseX + lungeX;
+  const sy = baseY - bounce + lungeY;
+  const squash = hopAnim>0 ? 1-0.15*env : 1;
+  const s = 3.2*baseScale*hopPulse;
+  ctx.save();
+  ctx.translate(sxFinal, sy);
+  ctx.scale(squash, 1/squash);
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#2a9d8f";
+  ctx.fillRect(-7*s, -6*s, 14*s, 6*s);
+  ctx.fillStyle = "#f2c9a0";
+  ctx.fillRect(-5*s, -10*s, 10*s, 5*s);
+  ctx.fillStyle = "#e8892c";
+  ctx.fillRect(-6*s, -11*s, 12*s, 3*s);
+  ctx.fillStyle = "#7a5230";
+  ctx.fillRect(-6*s, 0, 5*s, 6*s);
+  ctx.fillRect(1*s, 0, 5*s, 6*s);
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillRect(-7*s, 6*s, 6*s, 2*s);
+  ctx.fillRect(1*s, 6*s, 6*s, 2*s);
+  ctx.restore();
+  drawNavArrows(sxFinal, sy, baseScale);
+  drawNearestCoinBadge(sxFinal, sy);
+}
+
+const DEADZONE = 1.5;
+// A single frame can advance pos by many units at once (a fast mouse flick
+// fires several step callbacks before the next repaint) while the camera
+// only updates once per frame. Left to lerp gradually that opens up a huge
+// gap for a few frames -- enough to push the player off-canvas or, along Y,
+// past the point where depthScaleFor's denominator goes negative. Snap
+// instead of lerping once the gap gets that big.
+const CAMERA_SNAP_THRESHOLD = 12;
+function updateCamera(dt){
+  const visible = new Set([dimIndexOf(bX), dimIndexOf(bY), dimIndexOf(bZ)]);
+  const rate = 1-Math.pow(0.0005, dt/1000);
+  for(let i=0;i<N;i++){
+    if(!visible.has(i)){
+      camPos[i] = pos[i];
+      continue;
+    }
+    const diff = pos[i]-camPos[i];
+    if(Math.abs(diff) > CAMERA_SNAP_THRESHOLD){
+      camPos[i] = pos[i] - Math.sign(diff)*DEADZONE;
+      continue;
+    }
+    if(diff > DEADZONE) camPos[i] += (diff-DEADZONE)*rate;
+    else if(diff < -DEADZONE) camPos[i] += (diff+DEADZONE)*rate;
+  }
+}
+
+let lastT = performance.now();
+function frame(t){
+  const dt = t-lastT; lastT = t;
+  updateCamera(dt);
+  if(hopAnim>0) hopAnim = Math.max(0, hopAnim - dt/260);
+  updateRotation(dt);
+
+  ctx.clearRect(0,0,W,H);
+  const horizon = getHorizon();
+  const skyBottom = Math.max(0, Math.min(H, horizon));
+  const sky = ctx.createLinearGradient(0,0,0,Math.max(1,skyBottom));
+  sky.addColorStop(0,"#0b0b1a");
+  sky.addColorStop(1,"#1c1c3c");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0,0,W,skyBottom);
+  drawFloor(horizon);
+
+  const aCoord = Math.round(pos[A_DIM]);
+  const dim8Visible = dim8InView();
+  const drawList = [{type:'flag'}];
+  coins.forEach((c,i)=>{
+    if(c.got){
+      // A collected coin never comes back as a coin -- not even if you
+      // rewind time and this exact spot's dimensions rotate back into view.
+      // Its location permanently retires from coin-hood and shows as an
+      // inert claimed marker instead, at its real position when that's on
+      // the current axes, or at its stand-in anchor when it's not.
+      const claimedPos = coinVisibility(c) >= 1 ? c.pos : effectiveAnchor(c);
+      drawList.push({type:'attr', el:{ type:'claimed', pos: claimedPos }});
+      return;
+    }
+    if(coinVisibility(c) >= 1){
+      drawList.push({type:'coin', c});
+    } else {
+      // out of view entirely -> stands in as a thing made real, at a spot
+      // on the current X/Y/Z axes, kind picked by the current A position
+      // (and widened to include space aliens whenever dimension 8 is in
+      // view) -- unless its vibrating string has already resolved to a
+      // chute/ladder.
+      const attrType = c.portalResolved || attrTypeFor(i, aCoord, dim8Visible);
+      drawList.push({type:'attr', el:{ type: attrType, pos: effectiveAnchor(c) }});
+    }
+  });
+  // The ghost only ever shows for the second currently on the clock -- not
+  // any earlier or later one -- and only once it's actually been revisited,
+  // not at the very moment it's first being recorded (which would just
+  // draw it on top of ChumpMan himself).
+  if(timeSecondRevisited){
+    const ghost = timeHistory.get(timeSec);
+    drawList.push({type:'ghost', g:{ second: timeSec, pos: ghost.pos, overlap: currentBraneOverlap(ghost).length }});
+  }
+  const itemPos = (it)=> it.type==='coin' ? it.c.pos
+                       : it.type==='ghost' ? it.g.pos
+                       : it.type==='attr' ? it.el.pos
+                       : flagPos;
+  drawList.sort((a,b)=> project(itemPos(b)).pz - project(itemPos(a)).pz);
+  drawList.forEach(item=>{
+    if(item.type==='coin') drawCoin(item.c);
+    else if(item.type==='ghost') drawTimeGhost(item.g);
+    else if(item.type==='attr') drawAttrElement(item.el);
+    else drawFlag();
+  });
+
+  drawSightLines();
+  drawPlayer();
+  drawAxisGizmo();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const canvasFrame = document.getElementById('canvasFrame');
+function fitCanvas(){
+  const cw = canvasFrame.clientWidth, ch = canvasFrame.clientHeight;
+  if(cw <= 0 || ch <= 0) return;
+  const ratio = 16/10;
+  let w, h;
+  if(cw/ch > ratio){ h = ch; w = h*ratio; }
+  else { w = cw; h = w/ratio; }
+  canvas.style.width = Math.floor(w)+"px";
+  canvas.style.height = Math.floor(h)+"px";
+}
+
+const crt = document.getElementById('crt');
+function sizeCrt(){
+  crt.style.left = canvas.offsetLeft+"px";
+  crt.style.top = canvas.offsetTop+"px";
+  crt.style.width = canvas.offsetWidth+"px";
+  crt.style.height = canvas.offsetHeight+"px";
+}
+
+const axisKey = document.getElementById('axisKey');
+function sizeAxisKey(){
+  const gizmoLeftFrac = 778/960, gizmoTopFrac = 474/600, gizmoWidthFrac = 168/960;
+  axisKey.style.left = (canvas.offsetLeft + gizmoLeftFrac*canvas.offsetWidth) + "px";
+  axisKey.style.width = (gizmoWidthFrac*canvas.offsetWidth) + "px";
+  axisKey.style.bottom = ((1-gizmoTopFrac)*canvas.offsetHeight + 10) + "px";
+}
+
+function syncViewportHeight(){
+  if(window.innerWidth <= 700){
+    document.body.style.height = "";
+  } else {
+    document.body.style.height = window.innerHeight + "px";
+  }
+}
+
+function sizeOverlays(){ syncViewportHeight(); fitCanvas(); sizeCrt(); sizeAxisKey(); }
+window.addEventListener('resize', sizeOverlays);
+sizeOverlays();
+setTimeout(sizeOverlays, 50);
+setTimeout(sizeOverlays, 300);
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(sizeOverlays); }
+
+setActiveDim(0);
+renderVec();
+renderAxisDimsPanel();
+renderTemporalHud();
+renderScore();
+updateModeHud();
+renderNavModeTag();
+document.getElementById('coinCount').textContent = "0 / "+coins.length;
+})();
+</script>
