@@ -33,9 +33,17 @@ ICON = os.path.join(HERE, "icons", "chumpman11d.png")
 # a crashed/frozen process. Naming an explicit, persistent profile fixes
 # that: it gets a stable on-disk home under the OS's standard app-data
 # location, independent of whether the process exits cleanly.
-PROFILE_STORAGE = os.path.join(
-    os.path.expanduser("~"), ".local", "share", "ChumpMan11D", "QtWebEngine"
-)
+def _data_dir() -> str:
+    """Data folder: %APPDATA% / %LOCALAPPDATA% on Windows, ~/Library on macOS,
+    the usual XDG folder on Linux."""
+    if os.name == "nt":
+        return os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"), "ChumpMan11D")
+    if sys.platform == "darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "ChumpMan11D")
+    return os.path.join(os.path.expanduser("~"), ".local", "share", "ChumpMan11D")
+
+
+PROFILE_STORAGE = os.path.join(_data_dir(), "QtWebEngine")
 
 
 class ChumpManWindow(QMainWindow):

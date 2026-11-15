@@ -34,3 +34,10 @@ Full controls and mechanics are explained in the in-game "How to Play"
 card the moment you launch it — movement (mouse or keyboard), rotating
 hidden dimensions into view, the Time and Attribute axes, vibrating
 strings, and scoring.
+
+## Windows and macOS
+
+The same code runs on Windows and macOS. To install it there:
+
+* **Windows:** see [WINDOWS.md](WINDOWS.md) (`install.ps1`).
+* **macOS:** see [MACOS.md](MACOS.md) (`install-macos.sh`).
