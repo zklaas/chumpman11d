@@ -12,6 +12,11 @@ from __future__ import annotations
 import os
 import sys
 
+# The downloadable Linux package (AppImage) cannot use Chromium's sandbox on systems
+# that restrict it (e.g. recent Ubuntu); the page shown is the game's own local file.
+if getattr(sys, "frozen", False) and sys.platform.startswith("linux"):
+    os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+
 try:
     from PyQt6.QtCore import QUrl
     from PyQt6.QtGui import QIcon, QKeySequence, QShortcut
