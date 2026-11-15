@@ -3,7 +3,7 @@
 #
 #   bash install-macos.sh
 #
-# Creates .venv in this folder with PyQt6 PyQt6-WebEngine, writes a `chumpman11d` command into
+# Creates .venv in this folder with PyQt6 PyQt6-WebEngine, writes the `chumpman11d` command into
 # ~/.local/bin, and puts a ChumpMan 11D app (with its icon) in ~/Applications, so it
 # opens from Launchpad, Spotlight or the Dock.
 set -euo pipefail
